@@ -1,0 +1,38 @@
+﻿@inject ExpenseTracker.Data.Services.ICurrencyRepository srvCurs
+@inject ExpenseTracker.Data.Services.ICategoryRepository srvCats
+@inject ExpenseTracker.Data.Services.IExpenseRepository srvExps
+
+<h3>@title</h3>
+<table class="align-middle" style="border:thin; background:round">
+    <thead>
+        <tr>
+            <th>ABC</th>
+            <th>XYZ</th>
+            <th>123</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>123</th>
+            <th>456</th>
+            <th>789</th>
+        </tr>
+    </tbody>
+</table>
+
+@code {
+    [Parameter] public string title { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        srvCats = new ExpenseTracker.Data.Services.CategoryRepository();
+        srvCurs = new ExpenseTracker.Data.Services.CurrencyRepository();
+        srvExps = new ExpenseTracker.Data.Services.ExpenseRepository();
+
+        var cats = await srvCats.GetCategoriesAsync();
+        var curs = await srvCurs.GetCurrencyAsync();
+        var exps = await srvExps.GetExpensesAsync();
+
+    }
+
+}
