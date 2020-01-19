@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29609.76
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpenseTracker.Server", "ExpenseTracker.Server\ExpenseTracker.Server.csproj", "{58BDE18D-5B05-4B67-A273-5943AEF9D20B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExpenseTracker.Server", "ExpenseTracker.Server\ExpenseTracker.Server.csproj", "{58BDE18D-5B05-4B67-A273-5943AEF9D20B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExpenseTracker.Data", "ExpenseTracker.Data\ExpenseTracker.Data.csproj", "{0D2A25EC-718B-4E00-8BCB-EE1833ADE103}"
 EndProject

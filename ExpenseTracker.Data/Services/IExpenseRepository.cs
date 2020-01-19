@@ -11,6 +11,7 @@ namespace ExpenseTracker.Data.Services
         Task<Expense> GetExpensesAsync(int id);
         Task<bool> ExpenseExist(int id);
         Task<IEnumerable<Expense>> GetExpensesAsync(DateTime from, DateTime to);
+        Task<Tuple<IEnumerable<Expense>, double>> GetExpensesAsync(DateTime from, DateTime to, PaginationDTO pagination);
         Task<int> NewExpensesAsync(Expense expense);
         Task<int> DeleteExpensesAsync(int expenseId);
         Task<int> EditExpensesAsync(Expense expense, int id);

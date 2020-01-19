@@ -32,6 +32,11 @@ namespace ExpenseTracker.Data
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Expense>(entity =>
+            {
+                // Set key for entity
+                entity.HasKey(p => p.Id);
+            });
             modelBuilder.Entity<ExpenseCategory>().HasData(
                 new ExpenseCategory() { Id = 1, Category = "Grocery" },
                 new ExpenseCategory() { Id = 2, Category = "Restaurants" },

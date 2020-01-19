@@ -1,0 +1,249 @@
+﻿@using System.Linq;
+@inject Microsoft.Extensions.Configuration.IConfiguration configuration
+
+    <AlertDialog @ref="DeleteConfirmation" CloseEventCallback="@AlertDialog_OnDialogClose" dialogTitle="Delete Confirmation!" />
+
+@if (ShowDialog)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-secondary">
+                    <h5 class="modal-title" id="titleLable">@dialogTitle</h5>
+                    <button class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
+                        <span aria-hidden="false">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@aExpense" OnValidSubmit="@HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        @*<div><label for="Test" class="col-sm-10">@ExpenseId</label></div>*@
+                        <div class="form-group row">
+                            <label for="title" class="col-form-label col-form-label-sm col-sm-3">Title: </label>
+                            <InputText id="title" class="form-control form-control-sm col-sm-7" @bind-Value="@aExpense.ExpenseTitle"
+                                       placeholder="Enter Expense Title" maxlength=50></InputText>
+                            <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => aExpense.ExpenseTitle)" />
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="expensedate" class="col-form-label col-form-label-sm col-sm-3">Date: </label>
+                            <InputDate id="expensedate" class="form-control form-control-sm col-sm-4" @bind-Value="@aExpense.ExpenseDate" placeholder="Enter Expense Date"></InputDate>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="amount" class="col-form-label col-form-label-sm col-sm-3">Amount: </label>
+                            @*<InputText id="amount" class="form-control col-sm-3" style="text-align:right;" @bind-Value="@eAmount" placeholder="0.0" maxlength="12"></InputText>*@
+                            <InputNumber id="amount" class="form-control form-control-sm col-sm-3 text-right" @bind-Value="@aExpense.ExpensesAmount" placeholder="0.0" maxlength="12"></InputNumber>
+
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="country" class="col-form-label col-form-label-sm col-sm-3">Categories: </label>
+                            @*<InputSelect id="country" class="form-control col-sm-4" @bind-Value="@eCatID">
+                                    @foreach (var cat in Categories)
+                                        {
+                                        <option value="@cat.Id">@cat.Category</option>
+                                        }
+                                </InputSelect>*@
+                            <InputSelectNumber id="Category" class="form-control form-control-sm col-sm-4" @bind-Value="@aExpense.ExpenseCategoryId">
+                                <option value=-1>Select a category</option>
+                                @foreach (var cat in categories)
+                                    {
+                                    <option value="@cat.Id">@cat.Category</option>
+                                    }
+                            </InputSelectNumber>
+                        </div>
+                        <div class="form-group row">
+                            <label for="currency" class="col-form-label col-form-label-sm col-sm-3">Currency: </label>
+                            <InputSelectNumber id="currency" class="form-control form-control-sm col-sm-4" @bind-Value="@aExpense.CurrencyId">
+                                @foreach (var cur in currencies)
+                                    {
+                                    <option value="@cur.Id">@cur.CurrencyName</option>
+                                    }
+                            </InputSelectNumber>
+                        </div>
+                        <div class="form-group row">
+                            <label for="paytype" class="col-form-label col-form-label-sm col-sm-3">Payment Type: </label>
+                            <InputSelect id="paytype" class="form-control form-control-sm col-sm-8" @bind-Value="@aExpense.PaymentType">
+                                @foreach (var pt in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentType)))
+                                    {
+                                    <option value="@pt">@pt</option>
+                                    // @s = $"Value: ";// {Convert.ToInt32(pt)} Item: {pt}";
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="form-group row">
+                            <label for="paymethod" class="col-form-label col-form-label-sm col-sm-3">Payment Method: </label>
+                            <InputSelect id="paymethod" class="form-control form-control-sm col-sm-8" @bind-Value="@aExpense.PaymentMethod">
+                                @foreach (var pm in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentMethod)))
+                                    {
+                                    <option value="@pm">@pm</option>
+                                    }
+                            </InputSelect>
+                        </div>
+                        <div class="form-group row">
+                            <label for="sing" class="col-form-label col-form-label-sm col-sm-3">Signature: </label>
+                            <InputText id="sing" class="form-control form-control-sm col-sm-3" @bind-Value="@aExpense.Signature" placeholder="Signature please..Initials"></InputText>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="details" class="col-form-label col-form-label-sm col-sm-3">Details: </label>
+                            <InputTextArea id="details" maxlength=255 class="form-control col-sm-8" @bind-Value="@selectedExpenseDetails" placeholder="Expense related more details (if any)"></InputTextArea>
+                            @*<ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => aExpense.ExpenseDetail.Detail)" />*@
+                        </div>
+                        <div style="text-align:left; font-size:small">
+                            Signature: <strong>@aExpense.Signature</strong> &nbsp; &nbsp;
+                            Payment Method: <strong>@aExpense.PaymentMethod</strong> &nbsp; &nbsp;
+                            Payment Type: <strong>@aExpense.PaymentType</strong> &nbsp; &nbsp;
+                        </div>
+                        <br />
+                        <button type="submit" class="btn btn-primary">@submitTitle</button>&nbsp;&nbsp;
+                        @if (expenseId > 0)
+                        {
+                            <a class="btn btn-outline-danger" @onclick="@DeleteIt">Delete</a>
+                        }
+                        <a class="btn btn-outline-primary" @onclick="@Close">Close</a>
+
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool ShowDialog { get; set; }
+    public enum Operation { Add, Update, Delete, Cancel}
+    [Inject]
+    protected ExpenseTracker.Data.Services.IExpenseRepository expenseRepository { get; set; }
+    ExpenseTracker.Data.Expense aExpense;
+
+    [Inject]
+    protected ExpenseTracker.Data.Services.ICategoryRepository categoryRepository { get; set; }
+    protected List<ExpenseTracker.Data.ExpenseCategory> categories;
+    [Inject]
+    protected ExpenseTracker.Data.Services.ICurrencyRepository currencyyRepository { get; set; }
+    protected List<ExpenseTracker.Data.Currency> currencies;
+
+    [Parameter] public EventCallback<Operation> CloseEventCallback { get; set; }
+    public int expenseId { get; set; }
+    protected string dialogTitle = string.Empty;
+    protected string submitTitle = string.Empty;
+    protected AlertDialog DeleteConfirmation { get; set; }
+    bool delConfrim = false;
+    protected string? selectedExpenseDetails;
+
+    public async Task Show(int expId)
+    {
+        expenseId = expId;
+        if (expenseId > 0) //Update Or Delete
+        {
+            dialogTitle = "Expense Datails";
+            submitTitle = "Update Expense";
+            aExpense = await expenseRepository.GetExpensesAsync(expenseId);
+            selectedExpenseDetails = aExpense.ExpenseDetail?.Detail;
+        }
+        else //New
+        {
+            var default_cur = configuration["DefaultCurrency"];
+            var default_cat = configuration["DefaultCategory"];
+            var default_typ = configuration["DefaultPaymentType"];
+            var default_mth = configuration["DefaultPaymentMethod"];
+            var default_sig = configuration["DefaultSignature"];
+            dialogTitle = "New Expense";
+            submitTitle = "Add New Expense";
+
+            aExpense = new ExpenseTracker.Data.Expense();
+            aExpense.CurrencyId = int.Parse(default_cur);
+            aExpense.ExpenseCategoryId = int.Parse(default_cat);
+            aExpense.Signature = default_sig;
+            selectedExpenseDetails = aExpense.ExpenseDetail?.Detail;
+            // aExpense.Currency = currencies.Find(e => e.Id == aExpense.CurrencyId);
+            aExpense.PaymentMethod = (ExpenseTracker.Data.PaymentMethod)Enum.Parse(typeof(ExpenseTracker.Data.PaymentMethod), default_mth);
+            aExpense.PaymentType = (ExpenseTracker.Data.PaymentType)Enum.Parse(typeof(ExpenseTracker.Data.PaymentType), default_typ);
+
+        }
+        ShowDialog = true;
+
+        StateHasChanged();
+    }
+
+    private void ResetDialog()
+    {
+    }
+
+    public async Task Close()
+    {
+        ShowDialog = false;
+        await CloseEventCallback.InvokeAsync(Operation.Cancel);
+        StateHasChanged();
+    }
+    protected async Task DeleteIt()
+    {
+        DeleteConfirmation.dialogMessage = "Are sure want to delete select expense?";
+       // DeleteConfirmation(() => ShowDialog(expenseId));
+
+        if (delConfrim)
+        {
+            await expenseRepository.DeleteExpensesAsync(expenseId);
+            ShowDialog = false;
+            await CloseEventCallback.InvokeAsync(Operation.Delete);
+            StateHasChanged();
+        }
+    }
+    protected async Task HandleValidSubmit()
+    {
+        int newID = -1;
+
+        if (expenseId < 1) //New
+        {
+            if (!string.IsNullOrEmpty(selectedExpenseDetails))
+            {
+                ExpenseTracker.Data.ExpenseDetail expDetails = new ExpenseTracker.Data.ExpenseDetail { Detail = selectedExpenseDetails };
+                aExpense.ExpenseDetail = expDetails;
+            }
+
+            newID = await expenseRepository.NewExpensesAsync(aExpense);
+            await CloseEventCallback.InvokeAsync(Operation.Add);
+        }
+        else //Update
+        {
+            if (aExpense.ExpenseDetail == null)
+            {
+                if (!string.IsNullOrEmpty(selectedExpenseDetails))
+                {
+                    ExpenseTracker.Data.ExpenseDetail expDetails = new ExpenseTracker.Data.ExpenseDetail { Detail = selectedExpenseDetails };
+                    aExpense.ExpenseDetail = expDetails;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(selectedExpenseDetails))
+                {
+                    aExpense.ExpenseDetail = null;
+                }
+                else
+                {
+                    aExpense.ExpenseDetail.Detail = selectedExpenseDetails;
+                }
+            }
+            newID = await expenseRepository.EditExpensesAsync(aExpense, expenseId);
+            await CloseEventCallback.InvokeAsync(Operation.Update);
+        }
+        ShowDialog = false;
+
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = (await categoryRepository.GetCategoriesAsync(true)).ToList();
+        currencies = (await currencyyRepository.GetCurrencyAsync(true)).ToList();
+    }
+
+    protected async Task AlertDialog_OnDialogClose(bool e)
+    {
+        delConfrim = e;
+    }
+}

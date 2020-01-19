@@ -1,0 +1,69 @@
+﻿@using System.Linq;
+@inject Microsoft.Extensions.Configuration.IConfiguration configuration
+
+@if (ShowDialog)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="titleLable">@dialogTitle</h5>
+                    <button class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
+                        <span aria-hidden="false">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@ShowDialog" OnValidSubmit="@HandleValidSubmit">
+
+                        <div class="form-group row">
+                            <label for="expensedate" class="col-sm-9">@dialogMessage</label>
+                        </div>
+
+                        <br />
+                        <button type="submit" class="btn btn-primary">Ok</button>&nbsp;&nbsp;
+                        <a class="btn btn-outline-primary" @onclick="@Close">Close</a>
+
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool ShowDialog { get; set; }
+    [Parameter] public string dialogTitle { get; set; } = "Alert Dialog";
+    [Parameter] public EventCallback<bool> CloseEventCallback { get; set; }
+    public string dialogMessage { get; set; } = "Empty";
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    public async Task Show(string msg)
+    {
+        //ResetDialog();
+        dialogMessage = msg;
+        ShowDialog = true;
+
+        StateHasChanged();
+    }
+    private void ResetDialog()
+    {
+    }
+
+    public async Task Close()
+    {
+        ShowDialog = false;
+        await CloseEventCallback.InvokeAsync(false);
+        StateHasChanged();
+    }
+    protected async Task HandleValidSubmit()
+    {
+        ShowDialog = false;
+        await CloseEventCallback.InvokeAsync(true);
+        StateHasChanged();
+    }
+}
+

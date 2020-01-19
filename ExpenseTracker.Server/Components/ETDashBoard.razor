@@ -1,38 +1,193 @@
-﻿@inject ExpenseTracker.Data.Services.ICurrencyRepository srvCurs
+﻿@using ExpenseTracker.Server.Shared;
+
+@inject ExpenseTracker.Data.Services.ICurrencyRepository srvCurs
 @inject ExpenseTracker.Data.Services.ICategoryRepository srvCats
 @inject ExpenseTracker.Data.Services.IExpenseRepository srvExps
+@*<h3>@title</h3>*@
 
-<h3>@title</h3>
-<table class="align-middle" style="border:thin; background:round">
-    <thead>
-        <tr>
-            <th>ABC</th>
-            <th>XYZ</th>
-            <th>123</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <th>123</th>
-            <th>456</th>
-            <th>789</th>
-        </tr>
-    </tbody>
-</table>
+<InputSelectMonth SelectedMonth="(InputSelectMonth.Months) DateTime.Now.Month-1 " OnDropDownChange="OnMonthChanges" />
+
+<button @onclick="AddNewExpense" class="btn btn-info table-info">&nbsp;&nbsp; + &nbsp;&nbsp;</button>
+<AddExpenseDialog @ref="AddExpenseDialog" CloseEventCallback="@AddExpenseDialog_OnDialogClose"></AddExpenseDialog>
+
+<button @onclick="@(() => QuickANewExpense(0))" class="btn btn-info table-info">&nbsp;&nbsp; Q &nbsp;&nbsp;</button>
+<QuickAddExpenseDialog @ref="QAExpenseDialog" CloseEventCallback="@AddQuickExpenseDialog_OnDialogClose" />
+
+<AlertDialog @ref="DeleteConfirmation" CloseEventCallback="@AlertDialog_OnDialogClose"
+             dialogTitle="Delete Confirmation!" />
+
+@if (exps == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Expense Title</th>
+                <th>Sing</th>
+                <th>Operations</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var exp in exps)
+            {
+                <tr>
+                    <th>@exp.ExpenseDate.ToShortDateString()</th>
+                    <th>@exp.ExpensesAmount</th>
+                    <th>@exp.ExpenseTitle</th>
+                    <th>@exp.Signature</th>
+
+                    <td>
+                        <button @onclick="@(() => QuickANewExpense(exp.Id))" class="btn btn-outline-dark" data-toggle="modal" data-target="#AddEditEmpModal">
+                            <i class="fa fa-pencil-square-o"></i> Edit
+                        </button>
+
+                        <button @onclick="@(() => ShowAlertDialog(exp.Id))" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteEmpModal">
+                            <i class="fa fa-trash-o"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<Pagination TotaPagesQuantity="totalPageQuantity" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage" />
+<div class="bg-info rounded text-center">@status</div>
+@code
+{
+    private int totalPageQuantity;
+    private int currentPage = 1;
+    private string status = string.Empty;
+
+    private async Task SelectedPage(int page)
+    {
+        currentPage = page;
+        await LoadExpenses(page);
+    }
+}
+
+@code
+{
+    public AddExpenseDialog AddExpenseDialog { get; set; }
+    protected void AddNewExpense()
+    {
+        AddExpenseDialog.Show();
+    }
+    public async Task AddExpenseDialog_OnDialogClose()
+    {
+        // ExpenseTracker
+        StateHasChanged();
+    }
+}
+
+@*** Alert Dialog Code ***@
+@code{
+    protected AlertDialog DeleteConfirmation { get; set; }
+    protected async Task AlertDialog_OnDialogClose(bool e)
+    {
+        if (e)
+        {
+            //Confrim
+            status = "Selected Expense Deleted Successfully.";
+            await srvExps.DeleteExpensesAsync(ExpID);
+            await SelectedPage(currentPage);
+
+            StateHasChanged();
+        }
+        else
+        {
+            //Declien
+            status = "Delete Operation Canceled.";
+        }
+    }
+    protected async Task ShowAlertDialog(int expenseId = -1)
+    {
+        ExpID = expenseId;
+        string msg = "Are you sure, want to delete select expense";
+        await DeleteConfirmation.Show(msg);
+    }
+}
+
+@code
+{
+    protected int ExpID = -1;
+    protected QuickAddExpenseDialog QAExpenseDialog { get; set; }
+    protected async Task QuickANewExpense(int expenseId = -1)
+    {
+        ExpID = expenseId;
+        await QAExpenseDialog.Show(expenseId);
+    }
+    public async void AddQuickExpenseDialog_OnDialogClose(bool e)
+    {
+        // ExpenseTracker
+        string[] msg = new string[] { "added", "updated" };
+
+        if (e == true)
+        {
+            await SelectedPage(currentPage);
+            status = $"Expense has been " + msg[(ExpID > 0 ? 1 : 0)] + " successfully.";
+
+        }
+        StateHasChanged();
+    }
+}
+
 
 @code {
-    [Parameter] public string title { get; set; }
+    //Employees = (await EmployeeDataService.GetAllEmployees()).ToList();
 
+    //AddEmployeeDialog.OnDialogClose += AddEmployeeDialog_OnDialogClose;
+
+    /// /////////////////////////
+
+    [Parameter] public string title { get; set; }
+    //private List<ExpenseTracker.Data.Expense> exps = new List<ExpenseTracker.Data.Expense>();
+    private IEnumerable<ExpenseTracker.Data.Expense> exps;
+    private DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    private DateTime endDate = DateTime.Now.AddMonths(1);
+
+    protected async Task OnMonthChanges(Tuple<DateTime, DateTime> theDate)
+    {
+
+        startDate = theDate.Item1;
+        endDate = theDate.Item2;
+        await LoadExpenses();
+    }
     protected override async Task OnInitializedAsync()
     {
+        totalPageQuantity = 0;
+        currentPage = 1;
+
         srvCats = new ExpenseTracker.Data.Services.CategoryRepository();
         srvCurs = new ExpenseTracker.Data.Services.CurrencyRepository();
         srvExps = new ExpenseTracker.Data.Services.ExpenseRepository();
 
         var cats = await srvCats.GetCategoriesAsync();
         var curs = await srvCurs.GetCurrencyAsync();
-        var exps = await srvExps.GetExpensesAsync();
+        //exps = await srvExps.GetExpensesAsync();
+
+        DateTime todaysdate = DateTime.Now;
+        startDate = new DateTime(todaysdate.Year, todaysdate.Month, 1);
+        endDate = startDate.AddMonths(1).AddDays(-1);
+
+        await LoadExpenses();
+    }
+    private async Task LoadExpenses(int page = 1, int quantityPerPage = 5)
+    {
+        ExpenseTracker.Data.PaginationDTO aPage =
+                new ExpenseTracker.Data.PaginationDTO { Page = page, QuantityPerPage = quantityPerPage };
+
+
+        var tuplePagination = await srvExps.GetExpensesAsync(startDate, endDate, aPage);
+        exps = new List<ExpenseTracker.Data.Expense>();
+        exps = tuplePagination.Item1;
+        totalPageQuantity = (int)tuplePagination.Item2;
+        status = $"Expnse data loaded.";
 
     }
-
 }

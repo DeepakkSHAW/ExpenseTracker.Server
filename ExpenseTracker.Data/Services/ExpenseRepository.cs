@@ -14,11 +14,11 @@ namespace ExpenseTracker.Data.Services
         public async Task<int> DeleteExpensesAsync(int expenseId)
         {
             var result = -1;
-            var oExp = _ctx.Expenses.FirstOrDefault(x => x.Id == expenseId);
-            if (oExp != null)
+            var entiry = _ctx.Expenses.Include(d => d.ExpenseDetail).FirstOrDefault(x => x.Id == expenseId);
+            if (entiry != null)
             {
-                _ctx.Expenses.Attach(oExp);
-                _ctx.Expenses.Remove(oExp);
+                _ctx.Expenses.Attach(entiry);
+                _ctx.Expenses.Remove(entiry);
                 result = await _ctx.SaveChangesAsync();
             }
             return result;
@@ -47,7 +47,8 @@ namespace ExpenseTracker.Data.Services
                     entiry.Signature = dExpenseToUpdate.Signature;
                     entiry.PaymentMethod = dExpenseToUpdate.PaymentMethod;
                     entiry.PaymentType = dExpenseToUpdate.PaymentType;
-                    // _expContext.Update(oExp);
+                    _ctx.Entry(entiry).State = EntityState.Modified;
+                    //_ctx.Expenses.Update(entiry);
                     result = await _ctx.SaveChangesAsync();
                 }
             }
@@ -101,6 +102,38 @@ namespace ExpenseTracker.Data.Services
                     .ToListAsync();
         }
 
+        public async Task<Tuple<IEnumerable<Expense>, double>> GetExpensesAsync(DateTime from, DateTime to,
+            PaginationDTO pagination)
+        {
+            double pagesQuantity = 0;
+            var result = new Tuple<IEnumerable<Expense>, double>(null, 0);
+            //var queryable = _ctx.Expenses.AsQueryable();
+            try
+            {
+                var queryable = _ctx.Expenses.OrderByDescending(x => x.ExpenseDate)
+               .Include(s => s.Category)
+               .Include(s => s.Currency)
+               .Include(s => s.ExpenseDetail)
+               .Where(d => d.ExpenseDate >= from && d.ExpenseDate <= to);
+               //.Skip((pagination.Page - 1) * pagination.QuantityPerPage)
+               //.Take(pagination.QuantityPerPage);
+
+
+                double count = await queryable.CountAsync();
+                pagesQuantity = Math.Ceiling(count / pagination.QuantityPerPage);
+                //pagesQuantity = 10;
+                queryable = queryable.Skip((pagination.Page - 1) * pagination.QuantityPerPage)
+               .Take(pagination.QuantityPerPage);
+                result = new Tuple<IEnumerable<Expense>, double>(await queryable.ToListAsync(), pagesQuantity);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            //return await queryable.Paginate(pagination).ToListAsync();
+            //return new Tuple<IEnumerable<Expense>, double>(await queryable.ToListAsync(), pagesQuantity);
+            return result;
+        }
         public async Task<int> NewExpensesAsync(Expense expense)
         {
             var result = -1;

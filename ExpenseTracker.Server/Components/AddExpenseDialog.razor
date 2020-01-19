@@ -1,0 +1,103 @@
+﻿@*@page "/AddExpenseDialog"*@
+@*@page "/AddExpenseDialog/{ExpnsesID}"*@
+@inherits AddExpenseDialogBase
+
+@if (ShowDialog)
+{
+
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titleLable">Quick Add New Expense</h5>
+                    <button class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
+                        <span aria-hidden="false">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+
+                    <EditForm Model="@expense" OnValidSubmit="@HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="form-group">
+                            <label for="expTitle">Expense Title:</label>
+                            <InputText id="expTitle" class="form-control" @bind-Value="@expense.ExpenseTitle"
+                                       placeholder="Enter Expense Title"></InputText>
+                            <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => expense.ExpenseTitle)" />
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="expensedate" class="col-sm-3">Expense Date: </label>
+                            <InputDate id="expensedate" class="form-control col-sm-8" @bind-Value="@todaysDate" placeholder="Enter Expense Date"></InputDate>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="amount" class="col-sm-3">Amount: </label>
+                            <InputText id="amount" class="form-control col-sm-8" @bind-Value="@EnteredAmt" placeholder="0.0"></InputText>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="country" class="col-sm-3">Categories: </label>
+                            <InputSelect id="country" class="form-control col-sm-8" @bind-Value="@SelectedCategoryId">
+                                @foreach (var cat in Categories)
+                                    {
+                                    <option value="@cat.Id">@cat.Category</option>
+                                    }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="currency" class="col-sm-3">Currency: </label>
+                            <InputSelect id="currency" class="form-control col-sm-8" @bind-Value="@SelectedCurrencyId">
+                                @foreach (var car in Currencies)
+                                    {
+                                    <option value="@car.Id">@car.CurrencyName</option>
+                                    }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="paytype" class="col-sm-3">Payment Type: </label>
+                            <InputSelect id="paytype" class="form-control col-sm-8" @bind-Value="@SelectedPaymentType">
+                                @foreach (var pt in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentType)))
+                                    {
+                                    <option value="@(Convert.ToInt32(pt))">@pt</option>
+                                    // @s = $"Value: ";// {Convert.ToInt32(pt)} Item: {pt}";
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="paymethod" class="col-sm-3">Payment Method: </label>
+                            <InputSelect id="paymethod" class="form-control col-sm-8" @bind-Value="@SelectedPaymentMethod">
+                                @foreach (var pm in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentMethod)))
+                                    {
+                                    <option value="@(Convert.ToInt32(pm))">@pm</option>
+                                    }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="sing" class="col-sm-3">Signature: </label>
+                            <InputText id="sing" class="form-control col-sm-8" @bind-Value="@expense.Signature" placeholder="Signature please..Initials"></InputText>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="details" class="col-sm-3">Details: </label>
+                            <InputTextArea id="details" class="form-control col-sm-8" @bind-Value="@SelectedDetails" placeholder="Enter details"></InputTextArea>
+                            <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => expense.ExpenseDetail.Detail)" />
+                        </div>
+
+
+                        <button type="submit" class="btn btn-primary">Save Expense</button>
+                        <a class="btn btn-outline-primary" @onclick="@Close">Close</a>
+
+                    </EditForm>
+
+                </div>
+            </div>
+        </div>
+    </div>
+}
