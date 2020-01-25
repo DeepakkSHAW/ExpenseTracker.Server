@@ -1,11 +1,11 @@
 ﻿@using System.Linq;
 @inject Microsoft.Extensions.Configuration.IConfiguration configuration
 
-    <AlertDialog @ref="DeleteConfirmation" CloseEventCallback="@AlertDialog_OnDialogClose" dialogTitle="Delete Confirmation!" />
+<AlertDialog @ref="DeleteConfirmation" CloseEventCallback="@AlertDialog_OnDialogClose" dialogTitle="Delete Confirmation!" />
 
 @if (ShowDialog)
 {
-    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+    <div class="modal fade show hide fade d-block" id="expDetails" tabindex="-1" role="dialog" data-focus-on="input:first">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-secondary">
@@ -23,7 +23,7 @@
                             <label for="title" class="col-form-label col-form-label-sm col-sm-3">Title: </label>
                             <InputText id="title" class="form-control form-control-sm col-sm-7" @bind-Value="@aExpense.ExpenseTitle"
                                        placeholder="Enter Expense Title" maxlength=50></InputText>
-                            <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => aExpense.ExpenseTitle)" />
+                            <ValidationMessage class="offset-sm-7 col-sm-7" For="@(() => aExpense.ExpenseTitle)" />
                         </div>
 
                         <div class="form-group row">
@@ -52,6 +52,9 @@
                                     {
                                     <option value="@cat.Id">@cat.Category</option>
                                     }
+                                /**/
+                                /**/
+                                /**/
                             </InputSelectNumber>
                         </div>
                         <div class="form-group row">
@@ -102,19 +105,20 @@
                         @if (expenseId > 0)
                         {
                             <a class="btn btn-outline-danger" @onclick="@DeleteIt">Delete</a>
+                            @*<button class="btn btn-outline-danger" data-toggle="modal" href="#stack2">Delete Again</button>*@
                         }
                         <a class="btn btn-outline-primary" @onclick="@Close">Close</a>
-
                     </EditForm>
                 </div>
             </div>
         </div>
     </div>
+
 }
 
 @code {
     public bool ShowDialog { get; set; }
-    public enum Operation { Add, Update, Delete, Cancel}
+    public enum Operation { Add, Update, Delete, Cancel }
     [Inject]
     protected ExpenseTracker.Data.Services.IExpenseRepository expenseRepository { get; set; }
     ExpenseTracker.Data.Expense aExpense;
@@ -179,12 +183,16 @@
         await CloseEventCallback.InvokeAsync(Operation.Cancel);
         StateHasChanged();
     }
+    //protected string dialogMessage = string.Empty;
     protected async Task DeleteIt()
     {
-        DeleteConfirmation.dialogMessage = "Are sure want to delete select expense?";
-       // DeleteConfirmation(() => ShowDialog(expenseId));
-
-        if (delConfrim)
+        string msg = "Are you sure, want to delete select expense";
+        //dialogMessage = msg;
+        await DeleteConfirmation.Show(msg);
+    }
+    protected async Task AlertDialog_OnDialogClose(bool e)
+    {
+        if (e)
         {
             await expenseRepository.DeleteExpensesAsync(expenseId);
             ShowDialog = false;
@@ -240,10 +248,6 @@
     {
         categories = (await categoryRepository.GetCategoriesAsync(true)).ToList();
         currencies = (await currencyyRepository.GetCurrencyAsync(true)).ToList();
-    }
-
-    protected async Task AlertDialog_OnDialogClose(bool e)
-    {
-        delConfrim = e;
+        //dialogMessage = "Are you sure want to Delete the selected Expense";
     }
 }

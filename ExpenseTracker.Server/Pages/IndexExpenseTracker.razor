@@ -2,26 +2,32 @@
 @using ExpenseTracker.Server.Components
 @inject ExpenseTracker.Data.Services.IExpenseRepository ExpRepository
 
-<h4>Expense Tracker</h4>
-
 <QuickAddExpenseDialog @ref="QAExpenseDialog" CloseEventCallback="@AddQuickExpenseDialog_OnDialogClose" />
 <ExpenseDetailsDialog @ref="ExpenseDetailsDialog" CloseEventCallback="@ExpenseDetailsDialog_OnDialogClose" />
 <AlertDialog @ref="DeleteConfirmation" CloseEventCallback="@AlertDialog_OnDialogClose" dialogTitle="Delete Confirmation!" />
 
-<div class="bg-light rounded border border-success text-center row">
-    <div class="col-md-8">
-        <InputSelectMonth SelectedMonth="(InputSelectMonth.Months) DateTime.Now.Month-1 " OnDropDownChange="OnMonthChanges" />
+
+<div class="card-group">
+
+    <div class="card small">
+        <div class="card-body p-0 m-0">
+            <ExpenseTimeChart dateBegins="startDate" dateEnds="endDate" />
+        </div>
     </div>
-    <div class="col-md-4">
-        <span class="d-inline-block" data-toggle="tooltip" title="Quick Add New Expense">
-            <button @onclick="@(() => QuickANewExpense(0))" type="button" class="btn btn-primary btn-circle btn-xl">&nbsp;&nbsp; Q &nbsp;&nbsp;</button>
-        </span>
-        <span class="d-inline-block" data-toggle="tooltip" title="Add New Expense">
-            <button @onclick="@(() => NewExpenseDailog(0))" type="button" class="btn btn-primary btn-circle btn-xl">&nbsp;&nbsp; + &nbsp;&nbsp;</button>
-        </span>
+
+    <div class="card">
+        <div class="card-body bg-light rounded border border-success text-center">
+            @*<label for="expensedate" class="col-sm-1" style="text-align:right; vertical-align:bottom">@Title: </label>*@
+            Month: <InputSelectMonth SelectedMonth="(InputSelectMonth.Months) DateTime.Now.Month-1 " OnDropDownChange="OnMonthChanges" />
+            <span class="d-inline-block" data-toggle="tooltip" title="Quick Add New Expense">
+                <button @onclick="@(() => QuickANewExpense(0))" type="button" class="btn btn-primary btn-circle btn-xl">&nbsp;&nbsp; Q &nbsp;&nbsp;</button>
+            </span>
+            <span class="d-inline-block" data-toggle="tooltip" title="Add New Expense">
+                <button @onclick="@(() => NewExpenseDailog(0))" type="button" class="btn btn-primary btn-circle btn-xl">&nbsp;&nbsp; + &nbsp;&nbsp;</button>
+            </span>
+        </div>
     </div>
 </div>
-
 
 
 @if (expenses == null)
@@ -73,7 +79,7 @@ else
     </table>
 }
 
-<Pagination TotaPagesQuantity="totalPageQuantity" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage" />
+<ExpenseTracker.Server.Components.Pagination TotaPagesQuantity="totalPageQuantity" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage" />
 <div class="bg-light rounded border border-success text-center">@status</div>
 
 @code {
@@ -83,13 +89,13 @@ else
     private int totalPageQuantity = 0;
     private int currentPage = 1;
     protected int expenseID = -1;
-    private DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-    private DateTime endDate = DateTime.Now.AddMonths(1);
+    private DateTime startDate { get; set; } = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    private DateTime endDate { get; set; } = DateTime.Now.AddMonths(1);
 
     private IEnumerable<ExpenseTracker.Data.Expense> expenses;
 
-    protected QuickAddExpenseDialog QAExpenseDialog { get; set; }
-    protected ExpenseDetailsDialog ExpenseDetailsDialog { get; set; }
+    protected ExpenseTracker.Server.Components.QuickAddExpenseDialog QAExpenseDialog { get; set; }
+    protected ExpenseTracker.Server.Components.ExpenseDetailsDialog ExpenseDetailsDialog { get; set; }
     protected AlertDialog DeleteConfirmation { get; set; }
 
     //**ComponentBase Events**//
@@ -129,7 +135,7 @@ else
         if (e != ExpenseDetailsDialog.Operation.Cancel)
             await SelectedPage(currentPage);
 
-         status = $"Expense has been " + e;
+        status = $"Expense has been " + e;
         StateHasChanged();
     }
     protected async Task AlertDialog_OnDialogClose(bool e)

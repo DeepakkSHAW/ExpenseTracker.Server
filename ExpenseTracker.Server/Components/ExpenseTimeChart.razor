@@ -1,0 +1,189 @@
+﻿@inject ExpenseTracker.Data.Services.IExpenseRepository ExpRepo
+@*<h5>ExpenseTimeChart</h5>*@
+<div class="card-group">
+
+    <div class="card">
+        <div class="card-body p-0 m-0">
+            <Chart @ref="barChart" Type="ChartType.Bar" TItem="double" />
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0 m-0">
+            <table class="table table-bordered table-dark table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col" colspan="3" class="text-center bg-primary">Top Expense</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var exp in top5expenses)
+                    {
+                        <tr>
+                            <th scope="row">
+                                <input name="@exp.Id" type="checkbox" id="@exp.Id" checked="@(1 == 1)"
+                                       @onchange="@(async (e)=> await CheckboxClicked(exp, e.Value))" />
+                                <label for="@exp.Id" class="p-0 m-0">
+                                    @if (exp.ExpenseTitle.Length > 15)
+                                    {
+                                        @string.Concat(exp.ExpenseTitle.Substring(0, 15), "...")
+                                    }
+                                    else
+                                    {
+                                        @exp.ExpenseTitle
+                                    }
+                                </label>
+                            </th>
+                            <td>@exp.ExpensesAmount</td>
+                            <td>@exp.ExpenseDate.ToString("dd-MMM")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <a class="btn btn-outline-primary" @onclick="@(async () => await HandleRedraw())">Refresh</a>
+        </div>
+
+    </div>
+
+</div>
+@code {
+    [Parameter] public DateTime dateBegins { get; set; }
+    [Parameter] public DateTime dateEnds { get; set; }
+    private IEnumerable<ExpenseTracker.Data.Expense> expenses;
+    private List<ExpenseTracker.Data.Expense> top5expenses;
+    List<int> excludeIds = new List<int>();// { 31, 33 };
+    private List<double> dailyExpense = new List<double>();
+    private string[] Labels;
+    private List<string> initial_backgroundColors = new List<string> { ChartColor.FromRgba(200, 90, 100, 0.2f), ChartColor.FromRgba(0, 190, 100, 0.2f), ChartColor.FromRgba(255, 99, 132, 0.2f), ChartColor.FromRgba(54, 162, 235, 0.2f), ChartColor.FromRgba(255, 206, 86, 0.2f), ChartColor.FromRgba(75, 192, 192, 0.2f), ChartColor.FromRgba(153, 102, 255, 0.2f), ChartColor.FromRgba(255, 159, 64, 0.2f) };
+    private List<string> initial_borderColors = new List<string> { ChartColor.FromRgba(200, 90, 100, 1f), ChartColor.FromRgba(0, 190, 100, 1f), ChartColor.FromRgba(255, 99, 132, 1f), ChartColor.FromRgba(54, 162, 235, 1f), ChartColor.FromRgba(255, 206, 86, 1f), ChartColor.FromRgba(75, 192, 192, 1f), ChartColor.FromRgba(153, 102, 255, 1f), ChartColor.FromRgba(255, 159, 64, 1f) };
+    private List<string> backgroundColors = new List<string>();
+    private List<string> borderColors = new List<string>();
+
+    Chart<double> barChart;
+
+    protected async Task CheckboxClicked(ExpenseTracker.Data.Expense exp, object checkedValue)
+    {
+        //Console.WriteLine(exp.Id);
+
+        if (!(bool)checkedValue)
+        {
+            excludeIds.Add(exp.Id);
+        }
+        else
+        {
+            var indexId = excludeIds.FindIndex(e => e == exp.Id);
+            if (indexId >= 0)
+                excludeIds.RemoveAt(excludeIds.FindIndex(e => e == exp.Id));
+        }
+        LoadGraphData();
+        await HandleRedraw();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        //dateBegins = new DateTime(DateTime.Now.Year, 1, 1);
+        //dateEnds = new DateTime(DateTime.Now.Year, 1, 31);
+        // await LoadExpenseByDate();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await HandleRedraw();
+        }
+    }
+    protected override async void OnParametersSet()
+    {
+        //  base.OnParametersSet();
+        excludeIds.Clear();
+        await LoadExpenseByDate();
+        LoadGraphData();
+        StateHasChanged();
+        // await HandleRedraw();
+    }
+    protected async Task LoadExpenseByDate()
+    {
+        expenses = await ExpRepo.GetExpensesAsync(dateBegins, dateEnds);
+        top5expenses = expenses.OrderByDescending(amt => amt.ExpensesAmount).Take(5).ToList();
+    }
+
+    protected void LoadGraphData()
+    {
+        int iCount = initial_backgroundColors.Count;
+        int index = 0;
+        List<string> localLebal = new List<string>();
+        dailyExpense.Clear();
+        backgroundColors.Clear();
+        borderColors.Clear();
+
+        foreach (var expPerDay in expenses.Where(i => !excludeIds.Contains(i.Id)).GroupBy(dt => dt.ExpenseDate.Date))
+        {
+            dailyExpense.Add(expPerDay.Sum(exp => exp.ExpensesAmount));
+            localLebal.Add(expPerDay.Key.ToString("dd-MMM-yy"));
+            backgroundColors.Add(initial_backgroundColors[index % iCount]);
+            borderColors.Add(initial_borderColors[index % iCount]);
+            index++;
+
+        }
+        Labels = localLebal.ToArray();
+    }
+
+    protected async Task HandleRedraw()
+    {
+        //lineChart.Clear();
+
+        //lineChart.AddLabel(Labels);
+
+        //lineChart.AddDataSet(GetLineChartDataset());
+
+        //await lineChart.Update();
+
+        barChart.Clear();
+
+        barChart.AddLabel(Labels);
+
+
+        barChart.AddDataSet(GetBarChartDataset());
+
+        await barChart.Update();
+    }
+
+    LineChartDataset<double> GetLineChartDataset()
+    {
+        return new LineChartDataset<double>
+        {
+            Label = "# of randoms",
+            Data = RandomizeData(),
+            BackgroundColor = backgroundColors,
+            BorderColor = borderColors,
+            Fill = true,
+            PointRadius = 2,
+            BorderDash = new List<int> { }
+        };
+    }
+
+    BarChartDataset<double> GetBarChartDataset()
+    {
+        return new BarChartDataset<double>
+        {
+            Label = "# as on",
+            //Data = RandomizeData(),
+            Data = dailyExpense,
+            BackgroundColor = backgroundColors,
+            BorderColor = borderColors,
+            BorderWidth = 1,
+
+            HoverBackgroundColor = borderColors,
+            HoverBorderColor = backgroundColors,
+            HoverBorderWidth = 2
+
+        };
+    }
+
+    List<double> RandomizeData()
+    {
+        var r = new Random(DateTime.Now.Millisecond);
+
+        List<double> rndData = new List<double> { r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble() };
+        return rndData;
+    }
+}

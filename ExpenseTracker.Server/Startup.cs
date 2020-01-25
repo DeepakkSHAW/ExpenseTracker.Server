@@ -11,6 +11,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ExpenseTracker.Server.Data;
 using ExpenseTracker.Data.Services;
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
 
 namespace ExpenseTracker.Server
 {
@@ -34,7 +37,12 @@ namespace ExpenseTracker.Server
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ICurrencyRepository, CurrencyRepository>();
             services.AddScoped<IExpenseRepository, ExpenseRepository>();
-        }
+
+            services.AddBlazorise(options => {      options.ChangeTextOnKeyPress = true; /*/ optional */ })
+                      .AddBlazorise()
+                      .AddBootstrapProviders()
+                      .AddFontAwesomeIcons();
+                            }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

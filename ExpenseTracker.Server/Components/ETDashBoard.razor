@@ -1,4 +1,6 @@
-﻿@using ExpenseTracker.Server.Shared;
+﻿@using ExpenseTracker.Server.Shared
+@using ExpenseTracker.Server.Components
+
 
 @inject ExpenseTracker.Data.Services.ICurrencyRepository srvCurs
 @inject ExpenseTracker.Data.Services.ICategoryRepository srvCats
@@ -8,7 +10,7 @@
 <InputSelectMonth SelectedMonth="(InputSelectMonth.Months) DateTime.Now.Month-1 " OnDropDownChange="OnMonthChanges" />
 
 <button @onclick="AddNewExpense" class="btn btn-info table-info">&nbsp;&nbsp; + &nbsp;&nbsp;</button>
-<AddExpenseDialog @ref="AddExpenseDialog" CloseEventCallback="@AddExpenseDialog_OnDialogClose"></AddExpenseDialog>
+<AddExpenseDialog  @ref="AddExpenseDialog" CloseEventCallback="@AddExpenseDialog_OnDialogClose"></AddExpenseDialog>
 
 <button @onclick="@(() => QuickANewExpense(0))" class="btn btn-info table-info">&nbsp;&nbsp; Q &nbsp;&nbsp;</button>
 <QuickAddExpenseDialog @ref="QAExpenseDialog" CloseEventCallback="@AddQuickExpenseDialog_OnDialogClose" />
@@ -56,7 +58,7 @@ else
         </tbody>
     </table>
 }
-<Pagination TotaPagesQuantity="totalPageQuantity" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage" />
+<ExpenseTracker.Server.Components.Pagination TotaPagesQuantity="totalPageQuantity" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage" />
 <div class="bg-info rounded text-center">@status</div>
 @code
 {
