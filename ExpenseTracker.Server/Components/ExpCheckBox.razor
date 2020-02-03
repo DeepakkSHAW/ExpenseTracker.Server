@@ -1,0 +1,39 @@
+﻿@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+<input type="checkbox" name="@theId" checked="@isChecked" @onchange="@(async (e) => await Checkbox_Clicked(title, e.Value))" />
+<label class="p-0 m-0">
+    @if (title.Length > 15)
+    {
+        @string.Concat(title.Substring(0, 15), "...")
+    }
+    else
+    {
+        @title
+    }
+</label>
+@code
+ {
+    [Parameter] public string title { get; set; }
+    [Parameter] public int theId { get; set; }
+    [Parameter] public bool isChecked { get; set; } = true;
+    [Parameter] public EventCallback<object> EventCheckboxClicked { get; set; }
+
+    protected async Task Checkbox_Clicked(string name, object checkedValue)
+    {
+        Console.WriteLine($"{theId} { name} - {(bool)checkedValue}");
+        await EventCheckboxClicked.InvokeAsync(new { id = theId, value = (bool)checkedValue });
+
+        StateHasChanged();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            //await JSRuntime.InvokeVoidAsync(
+            //    "setElementText", divElement, "Text after render");
+
+            // document.getElementById(theId).checked = true;
+        }
+    }
+}

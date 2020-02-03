@@ -1,0 +1,311 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using ChartJs.Blazor.ChartJS.BarChart
+@using ChartJs.Blazor.ChartJS.BarChart.Axes
+@using ChartJs.Blazor.ChartJS.Common.Axes
+@using ChartJs.Blazor.ChartJS.Common.Axes.Ticks
+@using ChartJs.Blazor.ChartJS.Common.Time
+@using ChartJs.Blazor.ChartJS.Common.Enums
+@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.Common.Properties
+@using ChartJs.Blazor.Util
+
+<div class="container">
+    <div class="row">
+        <div class="col-8 p-3 m-1 border border-dark">
+            <ChartJsBarChart @ref="_barChartJs" Config="@_config" Height="100" />
+        </div>
+        <div class="col p-0 m-1">
+            @if (monthlyExpenses == null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            @*else if (!monthlyExpenses.Any())
+                {
+                    <p><em>Expense doesn't exist yet..Please add some.</em></p>
+                }*@
+            else
+            {
+                <table class="table table-active table-sm table-hover">
+                    <thead class="thead-light rounded">
+                        <tr>
+                            <th scope="col" colspan="3" @*class="text-center bg-primary" *@>Top Expense</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        @if (!monthlyExpenses.Any())
+                        {
+                            <p><em>Expense doesn't exists for selected month.</em></p>
+                        }
+                        else
+                        {
+                            @foreach (var exp in expenseExtToDisplay)
+                            {
+                                <tr>
+                                    <th scope="row" @key="exp">
+                                        @*<ExpCheckBox theId="@exp.Id" isChecked="true" title="@exp.ExpenseTitle"
+                                            EventCheckboxClicked="@CheckboxClicked" />*@
+                                        <input type="checkbox" id="@exp.expense.Id"
+                                               @bind="@exp.IsChecked"
+                                               @oninput="@(async (e) => await BuildeExcludeExpenseCollection(e, exp))" />
+                                        <label for="@exp.expense.Id" class="p-0 m-0">
+                                            @if (exp.expense.ExpenseTitle.Length > 15)
+                                            {
+                                                @string.Concat(exp.expense.ExpenseTitle.Substring(0, 15), "...")
+                                            }
+                                            else
+                                            {
+                                                @exp.expense.ExpenseTitle
+                                            }
+                                        </label>
+                                    </th>
+                                    <td>@exp.expense.ExpensesAmount</td>
+                                    <td>@exp.expense.ExpenseDate.ToString("dd-MMM")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+
+                //NOTE: Don't Delete the below paragraph it might need later for debug
+                @*<p>
+                        Count:    <b>@expenseExt.Count()</b>
+                        Excluded: <b> @expenseExt.Where(x => x.IsChecked == false).Count()</b>
+                        <a class="btn btn-outline-primary" @onclick="@(async () => await ChartRedraw())">Refresh</a>
+                    </p>*@
+            }
+
+        </div>
+    </div>
+</div>
+
+
+@code
+{
+    //[Parameter] public DateTime dateBegins { get; set; }
+    //[Parameter] public DateTime dateEnds { get; set; }
+    private DateTime startDate { get; set; } = DateTime.Today;
+    [Parameter] public List<ExpenseTracker.Data.Expense> monthlyExpenses { get; set; } = new List<ExpenseTracker.Data.Expense>();
+    private List<ExpenseTracker.Data.Expense> top5expenses;
+
+    private List<ExpenseCheckedExtension> expenseExt = new List<ExpenseCheckedExtension>();
+    private List<ExpenseCheckedExtension> expenseExtToDisplay = new List<ExpenseCheckedExtension>();
+    private List<int> _excludeIds = new List<int>();// { 31, 33 };
+
+    //**Chart Related setting **//
+    private BarConfig _config;
+    private ChartJsBarChart _barChartJs;
+    private List<string> initial_backgroundColors = new List<string> { ColorUtil.ColorString(90, 90, 100, 0.2f), ColorUtil.ColorString(200, 90, 100, 0.2f), ColorUtil.ColorString(0, 190, 100, 0.2f), ColorUtil.ColorString(255, 99, 132, 0.2f), ColorUtil.ColorString(54, 162, 235, 0.2f), ColorUtil.ColorString(255, 206, 86, 0.2f), ColorUtil.ColorString(75, 192, 192, 0.2f), ColorUtil.ColorString(153, 102, 255, 0.2f), ColorUtil.ColorString(255, 159, 64, 0.2f) };
+    private List<string> initial_borderColors = new List<string> { ColorUtil.ColorString(90, 90, 100, 0.1f), ColorUtil.ColorString(200, 90, 100, 1f), ColorUtil.ColorString(0, 190, 100, 1f), ColorUtil.ColorString(255, 99, 132, 1f), ColorUtil.ColorString(54, 162, 235, 1f), ColorUtil.ColorString(255, 206, 86, 1f), ColorUtil.ColorString(75, 192, 192, 1f), ColorUtil.ColorString(153, 102, 255, 1f), ColorUtil.ColorString(255, 159, 64, 1f) };
+
+    class ExpenseCheckedExtension
+    {
+        public ExpenseTracker.Data.Expense expense = new ExpenseTracker.Data.Expense();
+        public bool IsChecked = true;
+    }
+
+    private async Task BuildeExcludeExpenseCollection(ChangeEventArgs e, ExpenseCheckedExtension expExt)
+    {
+        //Console.WriteLine(e.Value);
+
+        bool isInExcludeId = _excludeIds.IndexOf(expExt.expense.Id) != -1;
+        if (isInExcludeId)
+        {
+            if ((bool)e.Value) //Remove from the list
+            {
+                _excludeIds.RemoveAt(_excludeIds.IndexOf(expExt.expense.Id));
+            }
+        }
+        else
+        {
+            if (!(bool)e.Value)
+            {
+                _excludeIds.Add(expExt.expense.Id);
+            }
+        }
+        StateHasChanged();
+        await ChartRedraw();
+    }
+    protected override void OnInitialized()
+    {
+        _config = new BarConfig
+        {
+            Options = new BarOptions
+            {
+                Title = new OptionsTitle
+                {
+                    Display = false,
+                    Text = "Expese monthly chart"
+                },
+                Legend = new ChartJs.Blazor.ChartJS.Common.Handlers.Legend { Position = Position.Bottom, Display = false },
+                Scales = new BarScales
+                {
+                    XAxes = new List<CartesianAxis>
+{
+                        new BarTimeAxis
+                        {
+                            BarPercentage = 1,
+                            OffsetGridLines = true,
+                            ScaleLabel = new ScaleLabel { Display = false, LabelString="Time Line"},
+                            GridLines = new ChartJs.Blazor.ChartJS.Common.GridLines { Display = true},
+                            Time = new TimeOptions
+                            {
+                                Unit = TimeMeasurement.Day,
+                                Round = TimeMeasurement.Day,
+                                TooltipFormat = "DD-MMM-YY",
+                                //DisplayFormats = TimeDisplayFormats.DE_CH
+                            },
+                            Offset = true,
+                            BarThickness=8
+                        }
+                },
+                    YAxes = new List<CartesianAxis>
+{
+                        new BarLinearCartesianAxis
+                        {
+                            GridLines = new ChartJs.Blazor.ChartJS.Common.GridLines { Display = true},
+                            ScaleLabel = new ScaleLabel { Display = false, LabelString="Amount"},
+                            Ticks = new LinearCartesianTicks
+                            {
+                                BeginAtZero = true,
+                                AutoSkip = true,
+                                //StepSize = 50,
+                            }
+
+                        }
+                    }
+                },
+                Responsive = true,
+
+            }
+        };
+
+        var barSet = new BarDataset<TimeTuple<double>>
+        {
+            Label = "# as on",
+            BackgroundColor = new[] { ColorUtil.RandomColorString(), ColorUtil.RandomColorString(), ColorUtil.RandomColorString(), ColorUtil.RandomColorString() },
+            BorderWidth = 1,
+            HoverBackgroundColor = ColorUtil.ColorString(0, 0, 0, 0.1),
+            HoverBorderColor = "#020202",
+            HoverBorderWidth = 1,
+            BorderColor = "#ffffff"
+        };
+
+        var now = DateTime.Now;
+        var rnd = new Random();
+        barSet.AddRange(Enumerable.Range(2, 4).Select(i => new TimeTuple<double>((Moment)now.AddHours(i), rnd.NextDouble() * 4)));
+        _config.Data.Datasets.Add(barSet);
+    }
+    private async Task ChartRedraw()
+    {
+        //List<string> localLebal = new List<string>();
+        List<string> backgroundColors = new List<string>();
+        List<string> borderColors = new List<string>();
+
+        var listMEChartData = new List<TimeTuple<double>>();
+
+        //listMEChartData.Add(new TimeTuple<double>((Moment)DateTime.Now.AddDays(1), 55.5));
+        //listMEChartData.Add(new TimeTuple<double>((Moment)DateTime.Now.AddDays(2), 59.5));
+        //listMEChartData.Add(new TimeTuple<double>((Moment)DateTime.Now.AddDays(6), 90.5));
+        //listMEChartData.Add(new TimeTuple<double>((Moment)DateTime.Now.AddDays(4), 120.95));
+        //listMEChartData.Add(new TimeTuple<double>((Moment)DateTime.Now.AddDays(5), -20));
+        //listMEChartData.Add(new TimeTuple<double>((Moment)DateTime.Now.AddDays(11), 160));
+        int iCount = initial_backgroundColors.Count;
+        //int index = 0;
+
+        //var excludeIds = expenseExt.Where(w => !w.IsChecked).Select(s => s.expense.Id);
+
+        foreach (var expPerDay in monthlyExpenses.Where(i => !_excludeIds.Contains(i.Id)).GroupBy(dr => dr.ExpenseDate.Day))
+        {
+            var theDay = expPerDay.Key;
+
+            //TODO: get the expense from groupby Key value
+            listMEChartData.Add(new TimeTuple<double>((Moment)expPerDay.First().ExpenseDate,
+                    expPerDay.Sum(exp => exp.ExpensesAmount)));
+
+            //localLebal.Add(expPerDay.Key.ToString("dd-MMM-yy"));
+            backgroundColors.Add(initial_backgroundColors[theDay % iCount]);
+            borderColors.Add(initial_borderColors[theDay % iCount]);
+
+            //index++;
+            // if (index > 10) break;
+        }
+
+        var barSet = new BarDataset<TimeTuple<double>>
+        {
+            Label = "# Expense Amt.",
+            BackgroundColor = backgroundColors.ToArray(),
+            BorderColor = borderColors.ToArray(),
+            BorderWidth = 1,
+
+            HoverBackgroundColor = borderColors.ToArray(),
+            HoverBorderColor = "#000000", //initial_backgroundColors.ToArray(),
+            HoverBorderWidth = 1,
+        };
+        barSet.AddRange(listMEChartData);
+        _config.Data.Datasets.Clear();
+        _config.Data.Datasets.Add(barSet);
+        // await _barChartJs.Update();
+    }
+    //protected override async Task OnAfterRenderAsync(bool firstRender)
+    //{
+    //    if (firstRender)
+    //    {
+    //        //await JSRuntime.InvokeVoidAsync(
+    //        //    "setElementText", divElement, "Text after render");
+
+    //        // document.getElementById(theId).checked = true;
+    //    }
+    //}
+
+    protected override async void OnParametersSet()
+    {
+        //excludeIds.Clear();
+        //expenseExt.Clear();
+        expenseExtToDisplay.Clear();
+        top5expenses = monthlyExpenses.OrderByDescending(amt => amt.ExpensesAmount).Take(5).ToList();
+        //expenseExt.AddRange(top5expenses);
+        if (top5expenses != null && top5expenses.Any())
+        {
+            startDate = top5expenses[0].ExpenseDate;
+
+            foreach (var exp in top5expenses)
+            {
+
+                if (!expenseExt.Exists(e => e.expense.Id == exp.Id))
+                    expenseExt.Add(new ExpenseCheckedExtension { expense = exp, IsChecked = true });
+                else
+                    expenseExt.FirstOrDefault(e => e.expense.Id == exp.Id).expense = exp;
+            }
+
+            expenseExtToDisplay = expenseExt.Where(e => e.expense.ExpenseDate.Month == startDate.Month).OrderByDescending(o => o.expense.ExpensesAmount).Take(5).ToList();
+        }
+        await ChartRedraw();
+        StateHasChanged();
+    }
+
+    protected async Task CheckboxClicked(object checkedValue)
+    {
+        Console.WriteLine(checkedValue.GetType());
+        var id = checkedValue.GetType().GetProperty("id").GetValue(checkedValue, null);
+        var value = checkedValue.GetType().GetProperty("value").GetValue(checkedValue, null);
+    }
+    //protected async Task CheckboxClicked(ExpenseTracker.Data.Expense exp, object checkedValue)
+    //{
+    //    //Console.WriteLine(exp.Id);
+    //    if (!(bool)checkedValue)
+    //    {
+    //        excludeIds.Add(exp.Id);
+    //    }
+    //    else
+    //    {
+    //        var indexId = excludeIds.FindIndex(e => e == exp.Id);
+    //        if (indexId >= 0)
+    //            excludeIds.RemoveAt(excludeIds.FindIndex(e => e == exp.Id));
+    //    }
+    //    //LoadGraphData();
+    //    //await HandleRedraw();
+
+    //    StateHasChanged();
+    //}
+}

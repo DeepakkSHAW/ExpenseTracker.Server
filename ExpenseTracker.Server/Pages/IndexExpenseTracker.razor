@@ -1,27 +1,25 @@
 ﻿@page "/IndexExpenseTracker"
 @using ExpenseTracker.Server.Components
+
 @inject ExpenseTracker.Data.Services.IExpenseRepository ExpRepository
 
 <QuickAddExpenseDialog @ref="QAExpenseDialog" CloseEventCallback="@AddQuickExpenseDialog_OnDialogClose" />
 <ExpenseDetailsDialog @ref="ExpenseDetailsDialog" CloseEventCallback="@ExpenseDetailsDialog_OnDialogClose" />
 <AlertDialog @ref="DeleteConfirmation" CloseEventCallback="@AlertDialog_OnDialogClose" dialogTitle="Delete Confirmation!" />
 
-
-<div class="card-group">
-
-    <div class="card small">
-        <div class="card-body p-0 m-0">
-            <ExpenseTimeChart dateBegins="startDate" dateEnds="endDate" />
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body bg-light rounded border border-success text-center">
-            @*<label for="expensedate" class="col-sm-1" style="text-align:right; vertical-align:bottom">@Title: </label>*@
+<div class="container">
+    <div class="row border-2">
+        <div class="col"><ExpCustBarChart monthlyExpenses="mExpense" /></div>
+        <div class="w-100"></div>
+        <div class="col-8 text-right">
             Month: <InputSelectMonth SelectedMonth="(InputSelectMonth.Months) DateTime.Now.Month-1 " OnDropDownChange="OnMonthChanges" />
+        </div>
+        <div class="col-2 text-right">
             <span class="d-inline-block" data-toggle="tooltip" title="Quick Add New Expense">
                 <button @onclick="@(() => QuickANewExpense(0))" type="button" class="btn btn-primary btn-circle btn-xl">&nbsp;&nbsp; Q &nbsp;&nbsp;</button>
             </span>
+        </div>
+        <div class="col-2 text-left">
             <span class="d-inline-block" data-toggle="tooltip" title="Add New Expense">
                 <button @onclick="@(() => NewExpenseDailog(0))" type="button" class="btn btn-primary btn-circle btn-xl">&nbsp;&nbsp; + &nbsp;&nbsp;</button>
             </span>
@@ -93,6 +91,7 @@ else
     private DateTime endDate { get; set; } = DateTime.Now.AddMonths(1);
 
     private IEnumerable<ExpenseTracker.Data.Expense> expenses;
+    private List<ExpenseTracker.Data.Expense> mExpense;
 
     protected ExpenseTracker.Server.Components.QuickAddExpenseDialog QAExpenseDialog { get; set; }
     protected ExpenseTracker.Server.Components.ExpenseDetailsDialog ExpenseDetailsDialog { get; set; }
@@ -105,6 +104,7 @@ else
         startDate = theDate.Item1;
         endDate = theDate.Item2;
         await LoadExpenses();
+        await LoadMonthlyExpenses();
     }
 
     protected async Task QuickANewExpense(int expenseId = -1)
@@ -125,6 +125,7 @@ else
         if (e == true)
         {
             await SelectedPage(currentPage);
+            await LoadMonthlyExpenses();
             status = $"Expense has been " + msg[(expenseID > 0 ? 1 : 0)] + " successfully.";
 
         }
@@ -133,7 +134,10 @@ else
     public async void ExpenseDetailsDialog_OnDialogClose(ExpenseDetailsDialog.Operation e)
     {
         if (e != ExpenseDetailsDialog.Operation.Cancel)
+        {
+            await LoadMonthlyExpenses();
             await SelectedPage(currentPage);
+        }
 
         status = $"Expense has been " + e;
         StateHasChanged();
@@ -145,6 +149,7 @@ else
             //Confrim
             status = "Selected Expense Deleted Successfully.";
             await ExpRepository.DeleteExpensesAsync(expenseID);
+            await LoadMonthlyExpenses();
             await SelectedPage(currentPage);
 
             StateHasChanged();
@@ -173,7 +178,9 @@ else
         DateTime todaysdate = DateTime.Now;
         startDate = new DateTime(todaysdate.Year, todaysdate.Month, 1);
         endDate = startDate.AddMonths(1).AddDays(-1);
+
         await LoadExpenses();
+        await LoadMonthlyExpenses();
     }
 
     //**Private Methods**//
@@ -188,5 +195,9 @@ else
 
         status = $"Expnse data loaded.";
 
+    }
+    private async Task LoadMonthlyExpenses()
+    {
+        mExpense = (await ExpRepository.GetExpensesAsync(startDate, endDate)).ToList();
     }
 }

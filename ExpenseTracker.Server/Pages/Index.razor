@@ -3,16 +3,43 @@
 @using System.Linq
 @using Blazorise.Charts
 <h1>Welcome to Expense Tracker</h1>
+<div class="container border border-primary">
+    <div class="row border border-primary">
+        <div class="col-9  border border-primary">Column</div>
+        <div class="col  border border-primary">Column</div>
+        <div class="w-100 border border-primary"></div>
+        <div class="col border border-primary">Column</div>
+        <div class="col border border-primary">Column</div>
+        <div class="w-100 border border-primary"></div>
+        <div class="col border border-primary">Column</div>
+    </div>
+</div>
+<button type="button" class="btn btn-tumblr"><span class="cib-tumblr btn-icon mr-2"></span> Tumblr</button><br>
+<button class="btn btn-primary float-right search disabled" disabled><span class='fa-left fas fa-sync-alt spinning'></span>Searching...</button>
+<br>
+
 @*<ETDashBoard title="Expense Tracker Dash Board" />*@
 
 
 @*<Input type="button" Clicked="@(async () => await HandleRedraw())">Redraw</input>*@
-<a class="btn btn-outline-primary" @onclick="@(async () => await HandleRedraw())">Reload</a>
-<LineChart @ref="lineChart" TItem="double" />
+<input type="range" step="1"
+       @bind-value="SliderValue"
+       @bind-value:event="oninput" />
+<p>Slider Value: <b>@SliderValue</b></p>
 
-<p>version: 1.1</p>
+<div class="card" style="width: 24rem;">
+    <div class="card-body m-0 p-0">
+        <LineChart @ref="lineChart" TItem="double" />
+    </div>
+</div>
+<a class="btn btn-outline-primary" @onclick="@(async () => await HandleRedraw())">Reload</a>
+
+
 @code
 {
+
+    int SliderValue = 0;
+
     protected override async Task OnInitializedAsync()
     {
 
