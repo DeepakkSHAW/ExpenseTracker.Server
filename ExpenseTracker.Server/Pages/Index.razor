@@ -1,97 +1,51 @@
 ﻿@page "/"
-@using ExpenseTracker.Server.Components
-@using System.Linq
-@using Blazorise.Charts
-<h1>Welcome to Expense Tracker</h1>
-<div class="container border border-primary">
-    <div class="row border border-primary">
-        <div class="col-9  border border-primary">Column</div>
-        <div class="col  border border-primary">Column</div>
-        <div class="w-100 border border-primary"></div>
-        <div class="col border border-primary">Column</div>
-        <div class="col border border-primary">Column</div>
-        <div class="w-100 border border-primary"></div>
-        <div class="col border border-primary">Column</div>
+@*<h1 class="text-left">About Expense Tracker</h1>*@
+<div class="card">
+    <img src=@bannerImageLocation class="card-img-top" alt="Monthly Expenses Tracker" height="200">
+    <div class="card-body">
+        <h5 class="card-title">About Expense Tracker</h5>
+        <p class="card-text">
+            Expense Tracker is a single page web application. Which helps to track and manage daily basis expenses.
+            This application gives simple chart to visualize the expense on various parameters such as expense category, Currency, Payment type and methods and more..
+            <br />
+            The Expense Tracker also gives the flexibility to upload bank / credit card statement as monthly expenses.
+            <br />
+            End of the month it helps you to do quick analysis of your expense as well.
+            Also, It has expense history to track your expenses in past.
+            <br />
+        </p>
+        <p class="card-text">
+            <b>Technical Features</b><br />
+            Expense Tracker is Experimental Service side Blazor application. Hosted on Azure as App Service using consumption plan.
+            <br />
+            This Application is designed & developed using Sqlite Database, Interfacing with Entity Framework using
+            Repository pattern.
+
+            ... more need to write (coming soon..)
+        </p>
+        <p class="card-text">
+            <small class="text-muted">
+
+                Last updated on: <b>@lastUpdate</b><br />
+                Source Code can be found <a target="_blank" href="http:\\github.com"> @@github</a>
+            </small>
+        </p>
     </div>
 </div>
-<button type="button" class="btn btn-tumblr"><span class="cib-tumblr btn-icon mr-2"></span> Tumblr</button><br>
-<button class="btn btn-primary float-right search disabled" disabled><span class='fa-left fas fa-sync-alt spinning'></span>Searching...</button>
-<br>
+<p class="text-justify">
 
-@*<ETDashBoard title="Expense Tracker Dash Board" />*@
+</p>
 
 
-@*<Input type="button" Clicked="@(async () => await HandleRedraw())">Redraw</input>*@
-<input type="range" step="1"
-       @bind-value="SliderValue"
-       @bind-value:event="oninput" />
-<p>Slider Value: <b>@SliderValue</b></p>
 
-<div class="card" style="width: 24rem;">
-    <div class="card-body m-0 p-0">
-        <LineChart @ref="lineChart" TItem="double" />
-    </div>
-</div>
-<a class="btn btn-outline-primary" @onclick="@(async () => await HandleRedraw())">Reload</a>
 
 
 @code
 {
-
-    int SliderValue = 0;
-
-    protected override async Task OnInitializedAsync()
-    {
-
-
-    }
-
-}
-
-@code{
-    LineChart<double> lineChart;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await HandleRedraw();
-        }
-    }
-
-    async Task HandleRedraw()
-    {
-        lineChart.Clear();
-
-        lineChart.AddLabel(Labels);
-
-        lineChart.AddDataSet(GetLineChartDataset());
-
-        await lineChart.Update();
-    }
-
-    LineChartDataset<double> GetLineChartDataset()
-    {
-        return new LineChartDataset<double>
-        {
-            Label = "# of randoms",
-            Data = RandomizeData(),
-            BackgroundColor = backgroundColors,
-            BorderColor = borderColors,
-            Fill = true,
-            PointRadius = 2,
-            BorderDash = new List<int> { }
-        };
-    }
-
-    string[] Labels = { "Red", "Blue", "Yellow", "Green", "Purple", "Orange" };
-    List<string> backgroundColors = new List<string> { ChartColor.FromRgba(255, 99, 132, 0.2f), ChartColor.FromRgba(54, 162, 235, 0.2f), ChartColor.FromRgba(255, 206, 86, 0.2f), ChartColor.FromRgba(75, 192, 192, 0.2f), ChartColor.FromRgba(153, 102, 255, 0.2f), ChartColor.FromRgba(255, 159, 64, 0.2f) };
-    List<string> borderColors = new List<string> { ChartColor.FromRgba(255, 99, 132, 1f), ChartColor.FromRgba(54, 162, 235, 1f), ChartColor.FromRgba(255, 206, 86, 1f), ChartColor.FromRgba(75, 192, 192, 1f), ChartColor.FromRgba(153, 102, 255, 1f), ChartColor.FromRgba(255, 159, 64, 1f) };
-
-    List<double> RandomizeData()
-    {
-        var r = new Random(DateTime.Now.Millisecond);
-
-        return new List<double> { r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble() };
-    }
+    private string lastUpdate { get; } = "6-FEB-2020"; //TODO Read from Project Properties
+    //private string bannerImageLocation { get; } = "/img/banner3.png";
+    //private string bannerImageLocation { get; } = "/img/banner1.png";
+    //private string bannerImageLocation { get; } = "/img/banner2.png";
+    //private string bannerImageLocation { get; } = "/img/banner4.jpg";
+    private string bannerImageLocation { get; } = "/img/banner5.jpg";
 }

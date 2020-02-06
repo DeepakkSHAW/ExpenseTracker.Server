@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Authors>Deepak SHAW</Authors>
+    <Company>Om Soft</Company>
+    <Copyright>@DK</Copyright>
+    <PackageIcon>MONEY.ICO</PackageIcon>
+    <PackageIconUrl />
+    <PackageTags>6-FEB-2020</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,6 +39,10 @@
   <ItemGroup>
     <None Update="DB\ETracker.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\Archive\MExpenses\Icons\MONEY.ICO">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
     </None>
   </ItemGroup>
 

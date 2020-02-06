@@ -9,7 +9,7 @@
 
 <InputSelectMonth SelectedMonth="(InputSelectMonth.Months) DateTime.Now.Month-1 " OnDropDownChange="OnMonthChanges" />
 
-<button @onclick="AddNewExpense" class="btn btn-info table-info">&nbsp;&nbsp; + &nbsp;&nbsp;</button>
+<button @onclick="AddNewExpense" class="btn btn-sm btn-outline-secondary">&nbsp;&nbsp; + &nbsp;&nbsp;</button>
 <AddExpenseDialog  @ref="AddExpenseDialog" CloseEventCallback="@AddExpenseDialog_OnDialogClose"></AddExpenseDialog>
 
 <button @onclick="@(() => QuickANewExpense(0))" class="btn btn-info table-info">&nbsp;&nbsp; Q &nbsp;&nbsp;</button>

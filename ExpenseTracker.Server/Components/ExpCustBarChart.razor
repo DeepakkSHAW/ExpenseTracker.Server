@@ -138,6 +138,7 @@
                     Text = "Expese monthly chart"
                 },
                 Legend = new ChartJs.Blazor.ChartJS.Common.Handlers.Legend { Position = Position.Bottom, Display = false },
+
                 Scales = new BarScales
                 {
                     XAxes = new List<CartesianAxis>
@@ -176,7 +177,7 @@
                     }
                 },
                 Responsive = true,
-
+                
             }
         };
 
@@ -190,6 +191,18 @@
             HoverBorderWidth = 1,
             BorderColor = "#ffffff"
         };
+
+        /*
+             var options = {
+            responsive: true,
+            datasetStrokeWidth : 3,
+            pointDotStrokeWidth : 4,
+            tooltipFillColor: "rgba(0,0,0,0.8)",
+            tooltipFontStyle: "bold",
+            tooltipTemplate: "<%if (label){%><%=label + ' hod' %>: <%}%><%= value + '°C' %>",
+            scaleLabel : "<%= Number(value).toFixed(0).replace('.', ',') + '°C'%>"
+        };
+            */
 
         var now = DateTime.Now;
         var rnd = new Random();
@@ -241,6 +254,7 @@
             HoverBackgroundColor = borderColors.ToArray(),
             HoverBorderColor = "#000000", //initial_backgroundColors.ToArray(),
             HoverBorderWidth = 1,
+            
         };
         barSet.AddRange(listMEChartData);
         _config.Data.Datasets.Clear();
