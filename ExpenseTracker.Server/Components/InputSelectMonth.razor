@@ -1,5 +1,5 @@
 ﻿@using System.ComponentModel
-<select id="expensedate" class="col-sm-3" @onchange="DropDownChanges">
+<select id="expensedate" class="@DropdownStyle" @onchange="DropDownChanges">
     @foreach (var mth in Enum.GetValues(typeof(Months)))
     {
         if (SelectedMonth == (Months)mth)
@@ -21,7 +21,7 @@
     public enum Months {[Description("Team Manager")] Year = -1, January, February, March, April, May, June, July, August, September, October, November, December }
     [Parameter] public EventCallback<Tuple<DateTime, DateTime>> OnDropDownChange { get; set; }
     [Parameter] public Months SelectedMonth { get; set; } = Months.Year;
-
+    [Parameter] public string DropdownStyle { get; set; } = "col-sm-3" ;
     protected override void OnInitialized()
     {
         //base.OnInitialized();
@@ -31,19 +31,19 @@
 
     }
 
-public async Task DropDownChanges(ChangeEventArgs e)
-{
-DateTime firstDayOfMonth = new DateTime(DateTime.Now.Year, 1, 1);
-DateTime lastDayOfMonth = new DateTime(DateTime.Now.Year, 12, 31);
+    public async Task DropDownChanges(ChangeEventArgs e)
+    {
+        DateTime firstDayOfMonth = new DateTime(DateTime.Now.Year, 1, 1);
+        DateTime lastDayOfMonth = new DateTime(DateTime.Now.Year, 12, 31);
 
-if (e.Value.ToString() != "-1")
-{
-    SelectedMonth = (Months)Enum.Parse(typeof(Months), e.Value.ToString());
+        if (e.Value.ToString() != "-1")
+        {
+            SelectedMonth = (Months)Enum.Parse(typeof(Months), e.Value.ToString());
 
-    firstDayOfMonth = DateTime.ParseExact(SelectedMonth.ToString(), "MMMM", System.Globalization.CultureInfo.InvariantCulture);
-    lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
-}
+            firstDayOfMonth = DateTime.ParseExact(SelectedMonth.ToString(), "MMMM", System.Globalization.CultureInfo.InvariantCulture);
+            lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+        }
 
-await OnDropDownChange.InvokeAsync(new Tuple<DateTime, DateTime>(firstDayOfMonth, lastDayOfMonth));
-}
+        await OnDropDownChange.InvokeAsync(new Tuple<DateTime, DateTime>(firstDayOfMonth, lastDayOfMonth));
+    }
 }

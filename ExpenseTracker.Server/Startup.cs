@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ExpenseTracker.Server.Data;
 using ExpenseTracker.Data.Services;
 using Blazorise;
 using Blazorise.Bootstrap;
@@ -32,7 +31,7 @@ namespace ExpenseTracker.Server
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<WeatherForecastService>();
+            //services.AddSingleton<WeatherForecastService>();
 
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ICurrencyRepository, CurrencyRepository>();

@@ -8,7 +8,7 @@
     <div class="modal fade show hide fade d-block" id="expDetails" tabindex="-1" role="dialog" data-focus-on="input:first">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header bg-secondary">
+                <div class="modal-header bg-info">
                     <h5 class="modal-title" id="titleLable">@dialogTitle</h5>
                     <button class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
                         <span aria-hidden="false">&times;</span>
@@ -52,9 +52,6 @@
                                     {
                                     <option value="@cat.Id">@cat.Category</option>
                                     }
-                                /**/
-                                /**/
-                                /**/
                             </InputSelectNumber>
                         </div>
                         <div class="form-group row">
@@ -159,6 +156,7 @@
             submitTitle = "Add New Expense";
 
             aExpense = new ExpenseTracker.Data.Expense();
+
             aExpense.CurrencyId = int.Parse(default_cur);
             aExpense.ExpenseCategoryId = int.Parse(default_cat);
             aExpense.Signature = default_sig;

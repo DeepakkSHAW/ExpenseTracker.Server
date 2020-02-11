@@ -1,0 +1,192 @@
+﻿@page "/ExpenseTrackerDashBoard"
+@using ExpenseTracker.Server.Components
+
+@inject ExpenseTracker.Data.Services.IExpenseRepository ExpRepository
+@*Month:
+    <InputSelectMonth SelectedMonth="(InputSelectMonth.Months) DateTime.Now.Month-1 " OnDropDownChange="OnMonthChanges" />*@
+<QuickAddExpenseDialog @ref="QuickAddNewExpenseDialog" CloseEventCallback="@QuickAddNewExpenseDialog_OnDialogClose" />
+<ExpenseDetailsDialog @ref="AddNewExpenseDetailsDialog" CloseEventCallback="@AddNewExpenseDetailsDialog_OnDialogClose" />
+
+<div class="container border-0 border-primary">
+    <div class="row border-0 align-middle">
+        @*<div class="col"><ExpCustBarChart monthlyExpenses="mExpense" /></div>
+            <div class="w-100"></div>*@
+        <div class="col-5 text-left">
+            <p class="invisible">  some text here..</p>
+        </div>
+        <div class="col-5 align-bottom text-right">
+            <span class="align-bottom" data-toggle="tooltip" title="Select Period">
+                <InputSelectMonth DropdownStyle="col-sm-4"  SelectedMonth="(InputSelectMonth.Months) DateTime.Now.Month-1 " OnDropDownChange="OnMonthChanges" />
+            </span>
+        </div>
+        <div class="col-1 text-right align-top"> @*//TODO:Alignment, its not working*@ 
+            <span class="d-inline-block" data-toggle="tooltip" title="Quick Add New Expense">
+                <button @onclick="@(() => ShowNewExpenseDailog(true, 0))" type="button" class="btn btn-sm btn-outline-success">&nbsp;&nbsp; Q &nbsp;&nbsp;</button>
+            </span>
+        </div>
+        <div class="col-1 text-left">
+            <span class="d-inline-block" data-toggle="tooltip" title="Add New Expense">
+                <button @onclick="@(() => ShowNewExpenseDailog(false, 0))" type="button" class="btn btn-sm btn-outline-primary">&nbsp;&nbsp; + &nbsp;&nbsp;</button>
+            </span>
+        </div>
+    </div>
+</div>
+
+@if (expenses == null)
+{
+    <p><em>Loading...</em></p>
+    _status = "Loading expenses..";
+}
+else
+{
+    <table class="table table-active table-sm table-hover">
+        <thead class="thead-light rounded">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Date</th>
+                <th scope="col">Amount</th>
+                <th scope="col">Expense Title</th>
+                <th scope="col">Sing</th>
+                <th scope="col">Operations</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white">
+            @foreach (var expense in expenses)
+            {
+                <tr>
+                    <th scope="row">
+                        <span class="d-inline-block" data-toggle="tooltip" title="Expense Detailed Info">
+                            <button @onclick="@(() => ShowNewExpenseDailog(false, expense.Id))" type="button" class="btn-circle btn-xl btn btn-secondary">&nbsp;&nbsp; i &nbsp;&nbsp;</button>
+                            @*<button type="button" class="btn-circle btn-xl btn btn-secondary">&nbsp;&nbsp; i &nbsp;&nbsp;</button>*@
+
+                        </span>
+                        @*<button type="button" class="btn btn-danger btn-circle">
+                            <i class="fa fa-pencil-square-o"></i>
+                        </button>*@
+                        @*//TODO: Check why round button is not displaying on page*@
+                    </th>
+                    <th>@expense.ExpenseDate.ToShortDateString()</th>
+                    <th>@expense.ExpensesAmount</th>
+                    <th>@expense.ExpenseTitle</th>
+                    <th>@expense.Signature</th>
+                    <td>
+                        <button class="btn btn-outline-dark" data-toggle="modal" data-target="#AddEditEmpModal">
+                            @*<button @onclick="@(() => QuickANewExpense(expense.Id))" class="btn btn-outline-dark" data-toggle="modal" data-target="#AddEditEmpModal">*@
+
+                            <i class="fa fa-pencil-square-o"></i> Edit
+                        </button>
+
+                        @*<button @onclick="@(() => ShowAlertDialog(expense.Id))" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteEmpModal">*@
+                        <button class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteEmpModal">
+
+                            <i class="fa fa-trash-o"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <ExpenseTracker.Server.Components.Pagination TotaPagesQuantity="_totalPageQuantity" CurrentPage="_currentPage" Radius="2" SelectedPage="SelectedPage" />
+
+}
+<div class="bg-light rounded border border-success text-center">@_status</div>
+
+
+@code
+{
+    private string _status { get; set; } = "status";
+    private int _totalPageQuantity = 0;
+    private int _currentPage = 1;
+    protected int _expenseID = -1;
+    private DateTime _startDate { get; set; } = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    private DateTime _endDate { get; set; } = DateTime.Now.AddMonths(1);
+
+    private IEnumerable<ExpenseTracker.Data.Expense> expenses;
+    private List<ExpenseTracker.Data.Expense> mExpense;
+
+    protected QuickAddExpenseDialog QuickAddNewExpenseDialog { get; set; }
+    protected ExpenseDetailsDialog AddNewExpenseDetailsDialog { get; set; }
+
+    //**ComponentBase Events**//
+    protected async Task OnMonthChanges(Tuple<DateTime, DateTime> theDate)
+    {
+        //DateTime todaysdate = DateTime.Now;
+        _startDate = theDate.Item1;
+        _endDate = theDate.Item2;
+
+        await LoadExpenses();
+        await LoadMonthlyExpenses();
+    }
+    public async void QuickAddNewExpenseDialog_OnDialogClose(bool e)
+    {
+
+        string[] msg = new string[] { "added", "updated" };
+
+        if (e == true)
+        {
+            await SelectedPage(_currentPage);
+            await LoadMonthlyExpenses();
+            _status = $"Expense has been " + msg[(_expenseID > 0 ? 1 : 0)] + " successfully.";
+
+        }
+        StateHasChanged();
+    }
+    public async void AddNewExpenseDetailsDialog_OnDialogClose(ExpenseDetailsDialog.Operation e)
+    {
+        if (e != ExpenseDetailsDialog.Operation.Cancel)
+        {
+            await LoadMonthlyExpenses();
+            await SelectedPage(_currentPage);
+        }
+
+        _status = $"Expense has been " + e;
+        StateHasChanged();
+    }
+    protected async Task ShowNewExpenseDailog(bool IsQuickExpenses, int expenseId = -1)
+    {
+        _expenseID = expenseId;
+        if (IsQuickExpenses)
+            await QuickAddNewExpenseDialog.Show(expenseId);
+        else
+            await AddNewExpenseDetailsDialog.Show(expenseId);
+    }
+    private async Task SelectedPage(int page)
+    {
+        _currentPage = page;
+        await LoadExpenses(page);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var startDate = DateTime.Today;
+        var endDate = DateTime.Today.AddMonths(1);
+        ExpenseTracker.Data.PaginationDTO aPage =
+                 new ExpenseTracker.Data.PaginationDTO { Page = 1, QuantityPerPage = 5 }; //TODO: QuantityPerPage need to be read from configuration file
+
+        var tuplePagination = await ExpRepository.GetExpensesAsync(startDate, endDate, aPage);
+        expenses = tuplePagination.Item1;
+        var totalPageQuantity = (int)tuplePagination.Item2;
+
+        _status = $"Expnse data loaded.";
+
+        //return base.OnInitializedAsync();
+    }
+
+    //**Private Methods**//
+    private async Task LoadExpenses(int page = 1, int quantityPerPage = 5)
+    {
+        ExpenseTracker.Data.PaginationDTO aPage =
+                new ExpenseTracker.Data.PaginationDTO { Page = page, QuantityPerPage = quantityPerPage };
+
+        var tuplePagination = await ExpRepository.GetExpensesAsync(_startDate, _endDate, aPage);
+        expenses = tuplePagination.Item1;
+        _totalPageQuantity = (int)tuplePagination.Item2;
+
+        _status = $"Expnse data loaded.";
+
+    }
+    private async Task LoadMonthlyExpenses()
+    {
+        mExpense = (await ExpRepository.GetExpensesAsync(_startDate, _endDate)).ToList();
+    }
+}

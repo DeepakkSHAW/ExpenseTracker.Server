@@ -8,6 +8,7 @@
     <PackageIcon>MONEY.ICO</PackageIcon>
     <PackageIconUrl />
     <PackageTags>6-FEB-2020</PackageTags>
+    <ApplicationIcon>wwwroot\MONEY.ICO</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
