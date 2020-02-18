@@ -84,8 +84,8 @@
 {
     //[Parameter] public DateTime dateBegins { get; set; }
     //[Parameter] public DateTime dateEnds { get; set; }
-    private DateTime startDate { get; set; } = DateTime.Today;
-    [Parameter] public List<ExpenseTracker.Data.Expense> monthlyExpenses { get; set; } = new List<ExpenseTracker.Data.Expense>();
+    //private DateTime startDate { get; set; } = DateTime.Today;
+    [Parameter] public List<ExpenseTracker.Data.Expense> monthlyExpenses { get; set; }// = new List<ExpenseTracker.Data.Expense>();
     private List<ExpenseTracker.Data.Expense> top5expenses;
 
     private List<ExpenseCheckedExtension> expenseExt = new List<ExpenseCheckedExtension>();
@@ -177,7 +177,7 @@
                     }
                 },
                 Responsive = true,
-                
+
             }
         };
 
@@ -254,7 +254,7 @@
             HoverBackgroundColor = borderColors.ToArray(),
             HoverBorderColor = "#000000", //initial_backgroundColors.ToArray(),
             HoverBorderWidth = 1,
-            
+
         };
         barSet.AddRange(listMEChartData);
         _config.Data.Datasets.Clear();
@@ -272,17 +272,23 @@
     //    }
     //}
 
+    //TODO: need to fix, on page change parameter should not be change
     protected override async void OnParametersSet()
     {
         //excludeIds.Clear();
         //expenseExt.Clear();
         expenseExtToDisplay.Clear();
+
+        //How Many months involve in top 5 expenses
         top5expenses = monthlyExpenses.OrderByDescending(amt => amt.ExpensesAmount).Take(5).ToList();
+
         //expenseExt.AddRange(top5expenses);
         if (top5expenses != null && top5expenses.Any())
         {
-            startDate = top5expenses[0].ExpenseDate;
+            //Get the start Date from the top 5 expenses in the list;
+            var theMonths = top5expenses.GroupBy(exp => exp.ExpenseDate.Month).Select(e => new { month = e.Key});
 
+            //startDate = top5expenses[0].ExpenseDate;
             foreach (var exp in top5expenses)
             {
 
@@ -292,7 +298,12 @@
                     expenseExt.FirstOrDefault(e => e.expense.Id == exp.Id).expense = exp;
             }
 
-            expenseExtToDisplay = expenseExt.Where(e => e.expense.ExpenseDate.Month == startDate.Month).OrderByDescending(o => o.expense.ExpensesAmount).Take(5).ToList();
+            //
+            expenseExtToDisplay = expenseExt.Where(exp => theMonths.Any(m => m.month.Equals(exp.expense.ExpenseDate.Month)))
+                .OrderByDescending(o => o.expense.ExpensesAmount).Take(5).ToList();
+            //else
+
+            //    expenseExtToDisplay = expenseExt.OrderByDescending(o => o.expense.ExpensesAmount).Take(5).ToList();
         }
         await ChartRedraw();
         StateHasChanged();

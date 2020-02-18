@@ -3,7 +3,8 @@
 
 @if (ShowDialog)
 {
-    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog" style="z-index:3; width:300px; height:500px" >
+    @*<div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog" style="z-index:3; width:300px; height:500px">*@
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-warning">
@@ -36,34 +37,34 @@
     [Parameter] public EventCallback<bool> CloseEventCallback { get; set; }
     public string dialogMessage { get; set; } = "Empty";
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
 
     }
 
-    public async Task Show(string msg)
-    {
-        //ResetDialog();
-        dialogMessage = msg;
-        ShowDialog = true;
+public async Task Show(string msg)
+{
+    //ResetDialog();
+    dialogMessage = msg;
+    ShowDialog = true;
 
-        StateHasChanged();
-    }
-    private void ResetDialog()
-    {
-    }
+    StateHasChanged();
+}
+private void ResetDialog()
+{
+}
 
-    public async Task Close()
-    {
-        ShowDialog = false;
-        await CloseEventCallback.InvokeAsync(false);
-        StateHasChanged();
-    }
-    protected async Task HandleValidSubmit()
-    {
-        ShowDialog = false;
-        await CloseEventCallback.InvokeAsync(true);
-        StateHasChanged();
-    }
+public async Task Close()
+{
+    ShowDialog = false;
+    await CloseEventCallback.InvokeAsync(false);
+    StateHasChanged();
+}
+protected async Task HandleValidSubmit()
+{
+    ShowDialog = false;
+    await CloseEventCallback.InvokeAsync(true);
+    StateHasChanged();
+}
 }
 

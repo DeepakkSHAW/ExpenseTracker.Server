@@ -16,53 +16,54 @@
                     <EditForm Model="@aExpense" OnValidSubmit="@HandleValidSubmit">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
-                                @*<div><label for="Test" class="col-sm-10">@ExpenseId</label></div>*@
-                                <div class="form-group row">
-                                    <label for="title" class="col-sm-3" style="height:15px; font-size:small">Title: </label>
-                                    <InputText id="title" class="form-control col-sm-7" @bind-Value="@aExpense.ExpenseTitle"
-                                               placeholder="Enter Expense Title" maxlength=50></InputText>
-                                    <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => aExpense.ExpenseTitle)" />
-                                </div>
+                        @*<div><label for="Test" class="col-sm-10">@ExpenseId</label></div>*@
+                        <div class="form-group row">
+                            <label for="title" class="col-sm-3" style="height:15px; font-size:small">Title: </label>
+                            <InputText id="title" class="form-control col-sm-7" @bind-Value="@aExpense.ExpenseTitle"
+                                       placeholder="Enter Expense Title" maxlength=50></InputText>
+                            <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => aExpense.ExpenseTitle)" />
+                        </div>
 
-                                <div class="form-group row">
-                                    <label for="expensedate" class="col-sm-3">Date: </label>
-                                    <InputDate id="expensedate" class="form-control col-sm-4" @bind-Value="@aExpense.ExpenseDate" placeholder="Enter Expense Date"></InputDate>
-                                </div>
+                        <div class="form-group row">
+                            <label for="expensedate" class="col-sm-3">Date: </label>
+                            <InputDate id="expensedate" class="form-control col-sm-4" @bind-Value="@aExpense.ExpenseDate" placeholder="Enter Expense Date"></InputDate>
+                        </div>
 
-                                <div class="form-group row">
-                                    <label for="amount" class="col-sm-3">Amount: </label>
-                                    @*<InputText id="amount" class="form-control col-sm-3" style="text-align:right;" @bind-Value="@eAmount" placeholder="0.0" maxlength="12"></InputText>*@
-                                    <InputNumber id="amount" class="form-control col-sm-3 text-right" @bind-Value="@aExpense.ExpensesAmount" placeholder="0.0" maxlength="12"></InputNumber>
+                        <div class="form-group row">
+                            <label for="amount" class="col-sm-3">Amount: </label>
+                            @*<InputText id="amount" class="form-control col-sm-3" style="text-align:right;" @bind-Value="@eAmount" placeholder="0.0" maxlength="12"></InputText>*@
+                            <InputNumber id="amount" class="form-control col-sm-3 text-right" @bind-Value="@aExpense.ExpensesAmount" placeholder="0.0" maxlength="12"></InputNumber>
 
-                                </div>
+                        </div>
 
-                                <div class="form-group row">
-                                    <label for="country" class="col-sm-3">Categories: </label>
-                                    @*<InputSelect id="country" class="form-control col-sm-4" @bind-Value="@eCatID">
-                        @foreach (var cat in Categories)
-                            {
-                            <option value="@cat.Id">@cat.Category</option>
-                            }
-                    </InputSelect>*@
-                                    <InputSelectNumber id="Category" class="form-control col-sm-4" @bind-Value="@aExpense.ExpenseCategoryId">
-                                        <option value=-1>Select a category</option>
-                                        @foreach (var cat in categories)
-                                            {
-                                            <option value="@cat.Id">@cat.Category</option>
-                                            }
-                                        /**/
-                                    </InputSelectNumber>
-                                </div>
-                                <div class="text-left">
-                                    Signature: <strong>@aExpense.Signature</strong> &nbsp; &nbsp;
-                                    @*Currency: <strong>@aExpense.Currency.CurrencyName</strong> &nbsp; &nbsp;*@
-                                    Currency: <strong>@_currencyName</strong> &nbsp; &nbsp;
-                                    Payment Method: <strong>@aExpense.PaymentMethod</strong> &nbsp; &nbsp;
-                                    Payment Type: <strong>@aExpense.PaymentType</strong> &nbsp; &nbsp;
-                                </div>
-                                <br />
-                                <button type="submit" class="btn btn-primary">@submitTitle</button>&nbsp;&nbsp;
-                                <a class="btn btn-outline-primary" @onclick="@Close">Close</a>
+                        <div class="form-group row">
+                            <label for="country" class="col-sm-3">Categories: </label>
+                            @*<InputSelect id="country" class="form-control col-sm-4" @bind-Value="@eCatID">
+                                    @foreach (var cat in Categories)
+                                        {
+                                        <option value="@cat.Id">@cat.Category</option>
+                                        }
+                                </InputSelect>*@
+                            <InputSelectNumber id="Category" class="form-control col-sm-4" @bind-Value="@aExpense.ExpenseCategoryId">
+                                <option value=-1>Select a category</option>
+                                @foreach (var cat in categories)
+                                    {
+                                    <option value="@cat.Id">@cat.Category</option>
+                                    }
+                                /**/
+                                /**/
+                            </InputSelectNumber>
+                        </div>
+                        <div class="text-left">
+                            Signature: <strong>@aExpense.Signature</strong> &nbsp; &nbsp;
+                            @*Currency: <strong>@aExpense.Currency.CurrencyName</strong> &nbsp; &nbsp;*@
+                            Currency: <strong>@_currencyName</strong> &nbsp; &nbsp;
+                            Payment Method: <strong>@aExpense.PaymentMethod</strong> &nbsp; &nbsp;
+                            Payment Type: <strong>@aExpense.PaymentType</strong> &nbsp; &nbsp;
+                        </div>
+                        <br />
+                        <button type="submit" class="btn btn-primary">@submitTitle</button>&nbsp;&nbsp;
+                        <a class="btn btn-outline-primary" @onclick="@Close">Close</a>
 
                     </EditForm>
                 </div>
@@ -91,7 +92,7 @@
     public int ExpenseId { get; set; }
     protected string dialogTitle = string.Empty;
     protected string submitTitle = string.Empty;
-    protected string dialogHeaderStyle ="primary"; //TODO: set Dailog Heade Color according to caller button
+    protected string dialogHeaderStyle = "success"; //TODO: set Dailog Heade Color according to caller button
 
 
     public async Task Show(int expenseId)
@@ -123,10 +124,10 @@
             //aExpense.Currency = currencies.Find(e => e.Id == aExpense.CurrencyId);
             aExpense.PaymentMethod = (ExpenseTracker.Data.PaymentMethod)Enum.Parse(typeof(ExpenseTracker.Data.PaymentMethod), default_mth);
             aExpense.PaymentType = (ExpenseTracker.Data.PaymentType)Enum.Parse(typeof(ExpenseTracker.Data.PaymentType), default_typ);
-        
-            var currency = await srvCurrency.GetCurrencyAsync(aExpense.CurrencyId);
-            _currencyName = currency.CurrencyName;
         }
+
+        var currency = await srvCurrency.GetCurrencyAsync(aExpense.CurrencyId);
+        _currencyName = currency.CurrencyName;
 
         ShowDialog = true;
 

@@ -1,0 +1,230 @@
+﻿@page "/ExpenseAnalysis"
+@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.PieChart
+@using ChartJs.Blazor.ChartJS.Common.Properties
+@using ChartJs.Blazor.Util
+
+<h4>Expense Analysis</h4>
+
+
+<EditForm Model="@aDate" OnValidSubmit="HandleValidSubmit">
+    <div class="container border border-info border-0">
+        <div class="row border border-info border-0">
+            <div class="col-2  border border-primary border-0 text-right">Start Date:</div>
+            <div class="col-4  border border-primary border-0 text-left">
+                <InputDate id="expensesdate" class="form-control form-control-sm col-4" @bind-Value="@_startDate" @oninput="@ResetError" placeholder="Enter Expense start Date"></InputDate>
+            </div>
+
+
+            <div class="col-2 border border-primary border-0 text-right">End Date:</div>
+            <div class="col-4 border border-primary border-0 text-left">
+                <InputDate id="expenseedate" class="form-control form-control-sm col-4" format-value="yyyy-MM-dd" @bind-Value="@_endDate" @oninput="@ResetError" placeholder="Enter Expense end Date"></InputDate>
+            </div>
+            <div class="w-100 border border-primary border-0"></div>
+
+            <div class="col border border-primary border-0 text-right">
+                <button type="submit" class="bg-white"> Analyze </button>
+            </div>
+            <div class="w-100 border border-primary border-0"></div>
+
+            <div class="col bg-light rounded border border-success text-center">
+                
+                @if (_hasError)
+                {
+                    @_errorMsg
+                }
+                else
+                {
+                    <p>
+                        Average expense: <b> @Math.Round(_avgExpenses, 2)</b>
+                        Highest expense: <b> @Math.Round(_higExpenses, 2)</b>
+                        Lowest expense:  <b> @Math.Round(_lowExpenses, 2)</b>
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+<div class="container border border-info border-0">
+    <div class="row border border-info border-0">
+        <div class="w-100 border border-primary border-0"></div>
+
+        <div class="col-6  border border-primary border-1 text-center">
+            <ChartJsPieChart @ref="_pieChartJs" Config="@_config" Width="300" Height="300" />
+
+        </div>
+        <div class="col-6  border border-primary border-1 text-center">
+            another chart2 come here
+        </div>
+    </div>
+    <div class="w-100 border border-primary border-0"></div>
+
+    <div class="row border border-info border-0">
+        <div class="w-100 border border-primary border-0"></div>
+
+        <div class="col-6  border border-primary border-1 text-center">
+            another chart3 come here
+        </div>
+        <div class="col-6  border border-primary border-1 text-center">
+            another chart4 come here
+        </div>
+    </div>
+</div>
+
+@code {
+    //protected class AnalysisHelper
+    //{
+    //    protected DateTime startDate { get; set; }
+    //    protected DateTime endtDate { get; set; }
+    //}
+    //private AnalysisHelper _analysisHelper = new AnalysisHelper();
+    private bool _hasError = false;
+    private string _errorMsg = string.Empty;
+
+    private DateTime aDate = DateTime.Now;
+    [Inject]
+    protected ExpenseTracker.Data.Services.IExpenseRepository srvExpense { get; set; }
+    private List<ExpenseTracker.Data.Expense> _expenses;
+
+    private DateTime _startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    private DateTime _endDate = DateTime.Now.AddMonths(1);
+
+    private double _avgExpenses = 0;
+    private double _higExpenses = 0;
+    private double _lowExpenses = 0;
+
+    private PieConfig _config;
+    private ChartJsPieChart _pieChartJs;
+    private ChartJsPieChart _pieChartJs2;
+
+    private List<string> initial_backgroundColors = new List<string> {
+        ColorUtil.ColorString(200, 100, 30, 0.2f), ColorUtil.ColorString(255, 135, 150, 0.2f),
+        ColorUtil.ColorString(200, 90, 100, 0.2f), ColorUtil.ColorString(200, 190, 100, 0.2f),
+        ColorUtil.ColorString(255, 99, 132, 0.2f), ColorUtil.ColorString(54, 162, 235, 0.2f),
+        ColorUtil.ColorString(255, 206, 86, 0.2f), ColorUtil.ColorString(75, 192, 192, 0.2f),
+        ColorUtil.ColorString(153, 102, 255, 0.2f), ColorUtil.ColorString(255, 159, 64, 0.2f),
+        ColorUtil.ColorString(49, 169, 86, 0.2f), ColorUtil.ColorString(20, 249, 240, 0.2f),
+        ColorUtil.ColorString(50, 50, 250, 0.2f), ColorUtil.ColorString(175, 175, 240, 0.2f),
+        ColorUtil.ColorString(150, 250, 150, 0.2f), ColorUtil.ColorString(205, 249, 140, 0.2f),
+        ColorUtil.ColorString(150, 150, 2, 0.2f), ColorUtil.ColorString(180, 200, 180, 0.2f)};
+
+    private List<string> initial_borderColors = new List<string> {
+        ColorUtil.ColorString(200, 100, 30, 1f), ColorUtil.ColorString(255, 135, 150, 1f),
+        ColorUtil.ColorString(200, 90, 100, 1f), ColorUtil.ColorString(200, 190, 100, 1f),
+        ColorUtil.ColorString(255, 99, 132, 1f), ColorUtil.ColorString(54, 162, 235, 1f),
+        ColorUtil.ColorString(255, 206, 86, 1f), ColorUtil.ColorString(75, 192, 192, 1f),
+        ColorUtil.ColorString(153, 102, 255, 1f), ColorUtil.ColorString(255, 159, 64, 1f),
+        ColorUtil.ColorString(49, 169, 86, 1f),ColorUtil.ColorString(20, 249, 240, 1f),
+        ColorUtil.ColorString(50, 50, 250, 1f), ColorUtil.ColorString(175, 175, 240, 1f),
+        ColorUtil.ColorString(150, 250, 150, 1f), ColorUtil.ColorString(205, 249, 140, 1f),
+        ColorUtil.ColorString(150, 150, 2, 1f), ColorUtil.ColorString(180, 200, 180, 1f)};
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _endDate = _startDate.AddMonths(1).AddDays(-1);
+        _hasError = false;
+        _errorMsg = "";
+
+        _config = new PieConfig
+        {
+            Options = new PieOptions
+            {
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Categories wise expenses between the dates"
+                },
+                Responsive = true,
+                Animation = new ArcAnimation
+                {
+                    AnimateRotate = true,
+                    AnimateScale = true
+                }
+            }
+        };
+        await ChartRedraw();
+
+        //_config.Data.Labels.AddRange(new[] { "A", "B", "C", "D" });
+
+        //var pieSet = new PieDataset
+        //{
+        //    BackgroundColor = new[] { ColorUtil.RandomColorString(), ColorUtil.RandomColorString(), ColorUtil.RandomColorString(), ColorUtil.RandomColorString() },
+        //    BorderWidth = 0,
+        //    HoverBackgroundColor = ColorUtil.RandomColorString(),
+        //    HoverBorderColor = ColorUtil.RandomColorString(),
+        //    HoverBorderWidth = 1,
+        //    BorderColor = "#ffffff",
+        //};
+
+        //pieSet.Data.AddRange(new double[] { 4, 5, 6, 7 });
+        //_config.Data.Datasets.Add(pieSet);
+    }
+    protected void ResetError()
+    {
+        if (_startDate >= _endDate)
+        {
+            _hasError = true;
+            _errorMsg = "Start Date can't be less than end date";
+        }
+        else
+        {
+            _hasError = false;
+              _errorMsg = "";
+        }
+    }
+    protected async Task HandleValidSubmit()
+    {
+        if (_startDate >= _endDate)
+        {
+            _hasError = true;
+            _errorMsg = "Start Date can't be less than end date";
+            return;
+        }
+        else
+        {
+            _hasError = false;
+        }
+
+        _config.Data.Datasets.Clear();
+        _config.Data.Labels.Clear();
+        await ChartRedraw();
+
+    }
+    private async Task ChartRedraw()
+    {
+        _expenses = (await srvExpense.GetExpensesAsync(_startDate, _endDate)).ToList();
+        _avgExpenses = _expenses.Sum(e => e.ExpensesAmount) / (_endDate - _startDate).TotalDays;
+        _higExpenses = _expenses.Max(e => e.ExpensesAmount);
+        _lowExpenses = _expenses.Min(e => e.ExpensesAmount);
+
+        //var message = $"Average expense: {_avgExpenses:N2} Highest expense {_higExpenses:N2} Lowest expense: {_lowExpenses:N2}";
+
+        var paiChartData = _expenses.GroupBy(e => e.ExpenseCategoryId).
+                Select(g => new
+                {
+                    Category = g.First().Category.Category,
+                    Value = g.Sum(s => s.ExpensesAmount)
+                }).OrderBy(o => o.Category);
+
+        _config.Data.Datasets.Clear();
+        _config.Data.Labels.Clear();
+
+        var pieSet = new PieDataset
+        {
+            BackgroundColor = initial_backgroundColors.ToArray(),
+            BorderColor = initial_borderColors.ToArray(),
+            BorderWidth = 1,
+
+            HoverBackgroundColor = initial_borderColors.ToArray(),
+            HoverBorderColor = initial_backgroundColors.ToArray(),
+            HoverBorderWidth = 1,
+        };
+
+        pieSet.Data.AddRange(paiChartData.Select(e => e.Value));
+
+        _config.Data.Labels.AddRange(paiChartData.Select(e => e.Category));
+        _config.Data.Datasets.Add(pieSet);
+    }
+}
