@@ -1,7 +1,13 @@
 ﻿@page "/ExpenseAnalysis"
+@using System.Globalization;
 @using ChartJs.Blazor.Charts
 @using ChartJs.Blazor.ChartJS.PieChart
+@using ChartJs.Blazor.ChartJS.BubbleChart
+@using ChartJs.Blazor.ChartJS.BarChart
+@using ChartJs.Blazor.ChartJS.BarChart.Axes
 @using ChartJs.Blazor.ChartJS.Common.Properties
+@using ChartJs.Blazor.ChartJS.Common.Axes
+@using ChartJs.Blazor.ChartJS.Common.Wrappers
 @using ChartJs.Blazor.Util
 
 <h4>Expense Analysis</h4>
@@ -28,7 +34,7 @@
             <div class="w-100 border border-primary border-0"></div>
 
             <div class="col bg-light rounded border border-success text-center">
-                
+
                 @if (_hasError)
                 {
                     @_errorMsg
@@ -50,12 +56,12 @@
     <div class="row border border-info border-0">
         <div class="w-100 border border-primary border-0"></div>
 
-        <div class="col-6  border border-primary border-1 text-center">
-            <ChartJsPieChart @ref="_pieChartJs" Config="@_config" Width="300" Height="300" />
+        <div class="col-6  border border-primary border-0 text-center">
+            <ChartJsPieChart @ref="_pieChartJs" Config="@_pieConfig" Width="150" Height="150" />
 
         </div>
-        <div class="col-6  border border-primary border-1 text-center">
-            another chart2 come here
+        <div class="col-6  border border-primary border-0 text-center">
+            <ChartJsPieChart @ref="_doughnutChartJs" Config="@_dnutConfig" Width="150" Height="150" />
         </div>
     </div>
     <div class="w-100 border border-primary border-0"></div>
@@ -63,11 +69,11 @@
     <div class="row border border-info border-0">
         <div class="w-100 border border-primary border-0"></div>
 
-        <div class="col-6  border border-primary border-1 text-center">
-            another chart3 come here
+        <div class="col-6  border border-primary border-0 text-center">
+            <ChartJsBubbleChart @ref="_bubbleChartJs" Config="@_bubbleConfig" Width="150" Height="150" />
         </div>
-        <div class="col-6  border border-primary border-1 text-center">
-            another chart4 come here
+        <div class="col-6  border border-primary border-0 text-center">
+            <ChartJsBarChart @ref="_barChartJs" Config="@_barConfig" Width="150" Height="150" />
         </div>
     </div>
 </div>
@@ -94,12 +100,17 @@
     private double _higExpenses = 0;
     private double _lowExpenses = 0;
 
-    private PieConfig _config;
+    private PieConfig _pieConfig;
+    private PieConfig _dnutConfig;
+    private BubbleConfig _bubbleConfig;
+    private BarConfig _barConfig;
+    private ChartJsBarChart _barChartJs;
     private ChartJsPieChart _pieChartJs;
-    private ChartJsPieChart _pieChartJs2;
+    private ChartJsPieChart _doughnutChartJs;
+    private ChartJsBubbleChart _bubbleChartJs;
 
     private List<string> initial_backgroundColors = new List<string> {
-        ColorUtil.ColorString(200, 100, 30, 0.2f), ColorUtil.ColorString(255, 135, 150, 0.2f),
+        ColorUtil.ColorString(200, 100, 30, 0.2f), ColorUtil.ColorString(205, 195, 175, 0.2f),
         ColorUtil.ColorString(200, 90, 100, 0.2f), ColorUtil.ColorString(200, 190, 100, 0.2f),
         ColorUtil.ColorString(255, 99, 132, 0.2f), ColorUtil.ColorString(54, 162, 235, 0.2f),
         ColorUtil.ColorString(255, 206, 86, 0.2f), ColorUtil.ColorString(75, 192, 192, 0.2f),
@@ -110,7 +121,7 @@
         ColorUtil.ColorString(150, 150, 2, 0.2f), ColorUtil.ColorString(180, 200, 180, 0.2f)};
 
     private List<string> initial_borderColors = new List<string> {
-        ColorUtil.ColorString(200, 100, 30, 1f), ColorUtil.ColorString(255, 135, 150, 1f),
+        ColorUtil.ColorString(200, 100, 30, 1f), ColorUtil.ColorString(205, 195, 175, 1f),
         ColorUtil.ColorString(200, 90, 100, 1f), ColorUtil.ColorString(200, 190, 100, 1f),
         ColorUtil.ColorString(255, 99, 132, 1f), ColorUtil.ColorString(54, 162, 235, 1f),
         ColorUtil.ColorString(255, 206, 86, 1f), ColorUtil.ColorString(75, 192, 192, 1f),
@@ -120,6 +131,7 @@
         ColorUtil.ColorString(150, 250, 150, 1f), ColorUtil.ColorString(205, 249, 140, 1f),
         ColorUtil.ColorString(150, 150, 2, 1f), ColorUtil.ColorString(180, 200, 180, 1f)};
 
+    private Random _rand = new Random();
 
     protected override async Task OnInitializedAsync()
     {
@@ -127,7 +139,7 @@
         _hasError = false;
         _errorMsg = "";
 
-        _config = new PieConfig
+        _pieConfig = new PieConfig
         {
             Options = new PieOptions
             {
@@ -144,22 +156,70 @@
                 }
             }
         };
+
+        _dnutConfig = new PieConfig
+        {
+            Options = new PieOptions(true)
+            {
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Expenses with payment method"
+                },
+                Responsive = true,
+                Animation = new ArcAnimation
+                {
+                    AnimateRotate = true,
+                    AnimateScale = true
+                }
+            }
+        };
+
+        _bubbleConfig = new BubbleConfig
+        {
+            Options = new BubbleOptions
+            {
+                //Title = new ChartJS.Common.Properties.OptionsTitle
+                Title = new ChartJs.Blazor.ChartJS.Common.Properties.OptionsTitle
+                {
+                    Display = true,
+                    Text = "Compare category wise weekly expenses",
+                },
+                Tooltips = new ChartJs.Blazor.ChartJS.Common.Properties.Tooltips
+                {
+                    Enabled = true,
+                    //Mode = PieChartModel,
+                    BackgroundColor = ColorUtil.ColorString(205, 195, 175, 1f),
+                }
+
+            }
+        };
+
+        _barConfig = new BarConfig
+        {
+            Options = new BarOptions
+            {
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Weekly Expense categories collection"
+                },
+                Scales = new BarScales
+                {
+                    XAxes = new List<CartesianAxis>
+{
+                        new BarCategoryAxis
+                        {
+                            BarThickness = BarThickness.Flex,
+                            Stacked = true
+                        }
+                    }
+                },
+                Responsive = true
+            }
+        };
+
         await ChartRedraw();
-
-        //_config.Data.Labels.AddRange(new[] { "A", "B", "C", "D" });
-
-        //var pieSet = new PieDataset
-        //{
-        //    BackgroundColor = new[] { ColorUtil.RandomColorString(), ColorUtil.RandomColorString(), ColorUtil.RandomColorString(), ColorUtil.RandomColorString() },
-        //    BorderWidth = 0,
-        //    HoverBackgroundColor = ColorUtil.RandomColorString(),
-        //    HoverBorderColor = ColorUtil.RandomColorString(),
-        //    HoverBorderWidth = 1,
-        //    BorderColor = "#ffffff",
-        //};
-
-        //pieSet.Data.AddRange(new double[] { 4, 5, 6, 7 });
-        //_config.Data.Datasets.Add(pieSet);
     }
     protected void ResetError()
     {
@@ -171,9 +231,10 @@
         else
         {
             _hasError = false;
-              _errorMsg = "";
+            _errorMsg = "";
         }
     }
+
     protected async Task HandleValidSubmit()
     {
         if (_startDate >= _endDate)
@@ -187,19 +248,22 @@
             _hasError = false;
         }
 
-        _config.Data.Datasets.Clear();
-        _config.Data.Labels.Clear();
+        _pieConfig.Data.Datasets.Clear();
+        _pieConfig.Data.Labels.Clear();
         await ChartRedraw();
 
     }
+
     private async Task ChartRedraw()
     {
         _expenses = (await srvExpense.GetExpensesAsync(_startDate, _endDate)).ToList();
+
         _avgExpenses = _expenses.Sum(e => e.ExpensesAmount) / (_endDate - _startDate).TotalDays;
         _higExpenses = _expenses.Max(e => e.ExpensesAmount);
         _lowExpenses = _expenses.Min(e => e.ExpensesAmount);
-
         //var message = $"Average expense: {_avgExpenses:N2} Highest expense {_higExpenses:N2} Lowest expense: {_lowExpenses:N2}";
+
+        #region "Categorywise paichart"
 
         var paiChartData = _expenses.GroupBy(e => e.ExpenseCategoryId).
                 Select(g => new
@@ -208,23 +272,152 @@
                     Value = g.Sum(s => s.ExpensesAmount)
                 }).OrderBy(o => o.Category);
 
-        _config.Data.Datasets.Clear();
-        _config.Data.Labels.Clear();
+
 
         var pieSet = new PieDataset
         {
             BackgroundColor = initial_backgroundColors.ToArray(),
             BorderColor = initial_borderColors.ToArray(),
-            BorderWidth = 1,
+            BorderWidth = 0,
 
             HoverBackgroundColor = initial_borderColors.ToArray(),
             HoverBorderColor = initial_backgroundColors.ToArray(),
-            HoverBorderWidth = 1,
+            HoverBorderWidth = 0,
         };
 
+        _pieConfig.Data.Datasets.Clear();
+        _pieConfig.Data.Labels.Clear();
         pieSet.Data.AddRange(paiChartData.Select(e => e.Value));
+        _pieConfig.Data.Labels.AddRange(paiChartData.Select(e => e.Category));
+        _pieConfig.Data.Datasets.Add(pieSet);
+        #endregion
 
-        _config.Data.Labels.AddRange(paiChartData.Select(e => e.Category));
-        _config.Data.Datasets.Add(pieSet);
+        #region "Payment method type doughnet chart"
+        var doughnutChartData = _expenses.GroupBy(e => e.PaymentMethod).
+        Select(g => new
+        {
+            PaymentMethod = g.First().PaymentMethod,
+            Value = g.Sum(s => s.ExpensesAmount)
+        }).OrderBy(o => o.PaymentMethod);
+
+        var doughnutSet = new PieDataset
+        {
+            BackgroundColor = initial_backgroundColors.ToArray(),
+            BorderWidth = 0,
+            HoverBackgroundColor = initial_borderColors.ToArray(),
+            HoverBorderColor = ColorUtil.RandomColorString(),
+            HoverBorderWidth = 1,
+            BorderColor = "#ffffff"
+        };
+
+        _dnutConfig.Data.Datasets.Clear();
+        _dnutConfig.Data.Labels.Clear();
+        doughnutSet.Data.AddRange(doughnutChartData.Select(e => e.Value));
+        _dnutConfig.Data.Labels.AddRange(doughnutChartData.Select(e => e.PaymentMethod.ToString()));
+        _dnutConfig.Data.Datasets.Add(doughnutSet);
+        #endregion
+
+        #region "Weekly basis top 5 categories expenses"
+
+        var bubbleChartData = _expenses.GroupBy(g => new
+        {
+            //GroupBy Weekly in the selected Period
+            WeekNum = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(g.ExpenseDate, CalendarWeekRule.FirstDay, DayOfWeek.Monday),
+            g.ExpenseCategoryId
+        })
+            .Select(e => new
+            {
+                Week = e.Key.WeekNum,
+                Value = e.Sum(s => s.ExpensesAmount),
+                CategoryName = e.First().Category.Category,
+                CategoryId = e.First().ExpenseCategoryId
+            }).OrderBy(o => o.Week).ThenBy(o => o.CategoryName); //System.Diagnostics.Debug.WriteLine(bubbleChartData.Count());
+
+        var expenseBubbleData = new List<BubbleDataset>();
+
+
+        foreach (var weekly in bubbleChartData.Select(w => w.Week).Distinct())
+        {
+            var Data = new List<BubbleDataPoint>();
+            foreach (var bubble in bubbleChartData.Where(e => e.Week == weekly))
+            {
+                // Data.Add(new BubbleDataPoint(_rand.NextDouble(), _rand.NextDouble(), 5 + _rand.NextDouble() * 10));
+                Data.Add(new BubbleDataPoint(bubble.CategoryId, bubble.Week, bubble.Value / 20));
+            }
+
+            var aBubbleDataset = new BubbleDataset
+            {
+                Label = $"Week-{weekly}",
+                BackgroundColor = ColorUtil.RandomColorString(),
+                //HitRadius = 5,
+                Data = Data,
+                //TODO: Bubble chart tooltip to fix with correct text and values
+            };
+
+            expenseBubbleData.Add(aBubbleDataset);
+            Console.WriteLine(weekly);
+        }
+
+        //_bubbleConfig.Data.Datasets.Clear();
+
+        _bubbleConfig.Data.Datasets = expenseBubbleData;
+
+        #endregion
+
+        #region "Weekly category wise expenses"
+        var barChartData = _expenses.GroupBy(g => new
+        {
+            //GroupBy Weekly in the selected Period
+            WeekNum = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(g.ExpenseDate, CalendarWeekRule.FirstDay, DayOfWeek.Monday),
+            g.ExpenseCategoryId
+        })
+    .Select(e => new
+    {
+        Week = e.Key.WeekNum,
+        Value = e.Sum(s => s.ExpensesAmount),
+        CategoryName = e.First().Category.Category,
+        CategoryId = e.First().ExpenseCategoryId
+    }).OrderBy(o => o.Week).ThenBy(o => o.CategoryName);
+
+
+        //bubbleChartData.Select(w => "Week-"+ w.Week).Distinct().ToArray();
+        //string[] s = new[] { "JAG", "DIV" };
+
+        var allCategories = barChartData.Select(c => c.CategoryName).Distinct().OrderBy(i => i);
+        var allWeeks = barChartData.Select(w => w.Week).Distinct();
+
+        foreach (var weekly in barChartData.Select(w => w.Week).Distinct())
+        {
+            _barConfig.Data.Labels.Add(ExpenseTrackerHelper.FirstDateOfWeek(_startDate.Year, weekly).ToString("dd-MMM-yy"));
+        }
+
+        foreach (var cat in allCategories)
+        {
+            int iCount = 0;
+            double[] barDataRange = new double[allWeeks.Count()];
+
+            var barDataset = new BarDataset<DoubleWrapper>
+            {
+                Label = cat,
+                BackgroundColor = ColorUtil.RandomColorString(),
+                BorderWidth = 1,
+                HoverBackgroundColor = ColorUtil.ColorString(0, 0, 0, 0.1),
+                HoverBorderColor = ColorUtil.RandomColorString(),
+                HoverBorderWidth = 1,
+                BorderColor = "#ffffff",
+            };
+            foreach (var week in allWeeks)
+            {
+                var v = barChartData.Where(i => i.Week == week && i.CategoryName == cat).FirstOrDefault();
+                if (v != null)
+                    barDataRange[iCount] = v.Value;
+
+                iCount++;
+            }
+            barDataset.AddRange(barDataRange.Wrap());
+            _barConfig.Data.Datasets.Add(barDataset);
+        }
     }
+    #endregion
+}
 }
