@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EFCore.BulkExtensions;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,26 @@ namespace ExpenseTracker.Data.Services
     {
         private ETDBContext _ctx;
         public ExpenseRepository() { _ctx = new ETDBContext(); }
+
+        public async Task<bool> BulkNewExpensesAsync(List<Expense> expenses)
+        {
+            bool vReturn = false;
+            if (expenses != null)
+            {
+                try
+                {
+                    _ctx.BulkInsert(expenses);
+                    vReturn = true;
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+
+            }
+            return vReturn;
+        }
+
         public async Task<int> DeleteExpensesAsync(int expenseId)
         {
             var result = -1;

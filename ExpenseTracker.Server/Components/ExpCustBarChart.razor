@@ -98,11 +98,7 @@
     private List<string> initial_backgroundColors = new List<string> { ColorUtil.ColorString(90, 90, 100, 0.2f), ColorUtil.ColorString(200, 90, 100, 0.2f), ColorUtil.ColorString(0, 190, 100, 0.2f), ColorUtil.ColorString(255, 99, 132, 0.2f), ColorUtil.ColorString(54, 162, 235, 0.2f), ColorUtil.ColorString(255, 206, 86, 0.2f), ColorUtil.ColorString(75, 192, 192, 0.2f), ColorUtil.ColorString(153, 102, 255, 0.2f), ColorUtil.ColorString(255, 159, 64, 0.2f) };
     private List<string> initial_borderColors = new List<string> { ColorUtil.ColorString(90, 90, 100, 0.1f), ColorUtil.ColorString(200, 90, 100, 1f), ColorUtil.ColorString(0, 190, 100, 1f), ColorUtil.ColorString(255, 99, 132, 1f), ColorUtil.ColorString(54, 162, 235, 1f), ColorUtil.ColorString(255, 206, 86, 1f), ColorUtil.ColorString(75, 192, 192, 1f), ColorUtil.ColorString(153, 102, 255, 1f), ColorUtil.ColorString(255, 159, 64, 1f) };
 
-    class ExpenseCheckedExtension
-    {
-        public ExpenseTracker.Data.Expense expense = new ExpenseTracker.Data.Expense();
-        public bool IsChecked = true;
-    }
+
 
     private async Task BuildeExcludeExpenseCollection(ChangeEventArgs e, ExpenseCheckedExtension expExt)
     {
@@ -298,7 +294,7 @@
                     expenseExt.FirstOrDefault(e => e.expense.Id == exp.Id).expense = exp;
             }
 
-            //
+            //*search list in a list
             expenseExtToDisplay = expenseExt.Where(exp => theMonths.Any(m => m.month.Equals(exp.expense.ExpenseDate.Month)))
                 .OrderByDescending(o => o.expense.ExpensesAmount).Take(5).ToList();
             //else

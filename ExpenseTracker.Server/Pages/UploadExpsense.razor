@@ -1,18 +1,298 @@
 ﻿@page "/UploadExpsense"
+@inject Microsoft.Extensions.Configuration.IConfiguration configuration
+@using System.IO
+@using System.Text
 
-<p>Expense Upload Under Construction</p>
-This is a dummy page..<br />
-<input type="file" class="btn btn-primary"  />
-@*<input type="file" class="btn btn-primary" @ref="@inputElement" />*@
-<br />
-<br />
-<button class="btn btn-outline-info" @onclick="Upload">Upload File</button>
+    <div class="container border-0 border-primary">
+        <div class="row border-0 border-primary">
+            <div class="col border-0 border-primary">
+                <InputFile class="btn btn-primary m-2" OnChange="HandleFileSelected" accept=".csv" />
+                <button class="btn btn-outline-primary m-2 oi oi-timer" @onclick="UploadDataIntoPage">Upload File</button>
+            </div>
+            <div class="col border-0 border-primary">
+                @if (_file != null)
+                {
+                    <textarea class="form-control border-info text-sm-left" @bind=@_status placeholder="upload status" cols="3"></textarea>
+                    @*<div class="col bg-light rounded border border-success text-center">
+                       <p>@_status</p>
+                    </div>*@
+                }
+            </div>
+        </div>
+    </div>
 
 
-    @code {
-        private async Task Upload()
+
+
+@if (_extendedExpenses != null)
+{
+    <EditForm Model="@_extendedExpenses" OnValidSubmit="@HandleValidSubmit">
+        <button type="submit" class="btn btn-primary m-2"> Save Uploaded Expenses </button>
+
+        <table class="table table-active table-responsive-sm table-hover">
+            <thead class="thead-light rounded">
+                <tr>
+                    <th class="m-0 p-0 text-left">#</th>
+                    <th class="m-0 p-0 text-left">
+                    <input type="checkbox" id="SelectAllHeader" 
+                           @onchange="EventArgs => {CheckAllExpense_selected(_allSelected, EventArgs.Value); }" /></th>
+                    <th class="m-0 p-0">Date</th>
+                    <th class="m-0 p-0">Amount</th>
+                    <th class="m-0 p-0">Expense Title</th>
+                    <th class="m-0 p-0">Category</th>
+                    <th class="m-0 p-0">Sing</th>
+                    <th class="m-0 p-0">Currency</th>
+                    <th class="m-0 p-0">Payment Type</th>
+                    <th class="m-0 p-0">Payment Method:</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var extExpense in _extendedExpenses)
+                {
+                    _iCount++;
+                    <tr>
+                        <th class="text-left p-0 m-0">@_iCount</th>
+                        <td class="p-0 m-0" @key="extExpense">
+                            <input type="checkbox" id="@extExpense.expense.Id" checked="@extExpense.IsChecked"
+                                   @onchange="@(e => CheckSingleExpense_selected(extExpense, e.Value))"  />
+                        </td>
+                        <td class="p-0 m-0">@extExpense.expense.ExpenseDate.ToString("dd-MMM-yy")</td>
+                        <td class="p-0 m-0">@extExpense.expense.ExpensesAmount</td>
+                        <td class="p-0 m-0">@extExpense.expense.ExpenseTitle</td>
+                        <td class="p-0 m-0">
+                            <InputSelectNumber id="Category" @bind-Value="@extExpense.expense.ExpenseCategoryId">
+                                @foreach (var cat in _categories)
+                                {<option value="@cat.Id">@cat.Category</option>}
+                            </InputSelectNumber>
+                        </td>
+                        <td class="p-0 m-0">@extExpense.expense.Signature</td>
+                        <td class="p-0 m-0">
+                            <InputSelectNumber id="currency" @bind-Value="@extExpense.expense.CurrencyId">
+                                @foreach (var cur in _currencies)
+                                {<option value="@cur.Id">@cur.CurrencyName</option>}
+                            </InputSelectNumber>
+                        </td>
+                        <td class="p-0 m-0">
+                            <InputSelect id="paytype" @bind-Value="@extExpense.expense.PaymentType">
+                                @foreach (var pt in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentType)))
+                                        {
+                                    <option value="@pt">@pt</option>
+                                        }
+                            </InputSelect>
+                        </td>
+                        <td class="p-0 m-0">
+
+                            <InputSelect id="paymethod" @bind-Value="@extExpense.expense.PaymentMethod">
+                                @foreach (var pm in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentMethod)))
+                                {<option value="@pm">@pm</option>}
+                            </InputSelect>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @*<button type="submit" class="btn btn-primary"> Save uploaded Expenses </button>*@
+    </EditForm>
+}
+
+
+@code {
+
+    IFileListEntry _file;
+    string _status;
+    int _iCount = 0;
+    bool _allSelected = true;
+
+    List<ExpenseCheckedExtension> _extendedExpenses;
+
+    [Inject]
+    protected ExpenseTracker.Data.Services.IExpenseRepository srvExpense { get; set; }
+    ExpenseTracker.Data.Expense _expense;
+
+    [Inject]
+    protected ExpenseTracker.Data.Services.ICategoryRepository srvCategory { get; set; }
+    protected List<ExpenseTracker.Data.ExpenseCategory> _categories;
+    [Inject]
+    protected ExpenseTracker.Data.Services.ICurrencyRepository srvCurrency { get; set; }
+    protected List<ExpenseTracker.Data.Currency> _currencies;
+    [Inject]
+    protected ExpenseTracker.Data.Services.IExpenseRuleRepository srvExpRule { get; set; }
+    protected List<ExpenseTracker.Data.ExpenseRule> _expRule;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = (await srvCategory.GetCategoriesAsync(true)).ToList();
+        _currencies = (await srvCurrency.GetCurrencyAsync(true)).ToList();
+        _expRule = (await srvExpRule.GetExpenseRulesAsync()).ToList();
+    }
+
+    protected ExpenseTracker.Data.ExpenseRule RuleEngine(string expTitle)
+    {
+        //TODO: might need to relook into Rule Engine again and after regression testing
+        var expTitleWords = expTitle.Split(new char[] { ' ', ',', '\\', ';' },  StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var words in expTitleWords)
         {
-            
+            if (!string.IsNullOrEmpty(words))
+            {
+                var expRule = _expRule.Where(rule => rule.SearchText.Contains(words, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                if (expRule != null)
+                {
+                    return expRule;
+                    //break;
+                }
+            }
+        }
+        return null;
+        #region "more research required further"
+        //TODO: the loop shoud go away with single statement
+        /*
+    expenseExtToDisplay = expenseExt.Where(exp => theMonths.Any(m => m.month.Equals(exp.expense.ExpenseDate.Month)))
+        .OrderByDescending(o => o.expense.ExpensesAmount).Take(5).ToList();
+
+            a.Any(item => b.Contains(item))
+    // or, as in the column using a method group
+    a.Any(b.Contains)
+ */
+        //var expenseRule = _expRule
+        //    .Where(rule => rule.SearchText.Split
+
+        /*
+         *        Console.WriteLine("stop here");
+
+        var expTitle = "WOOLWORTHS 3304 QUEEN    MELBOURNE";
+        var expTitleWords = expTitle.Split(' ', ',', '\\', ';');
+
+        foreach (var words in expTitleWords)
+        {
+
+            var expRule = _expRule.Where(rule => rule.SearchText.Contains(words, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            if (expRule != null)
+            {
+                break;
+            }
+
+        }
+        var v = expTitle.Split(' ', ',', '\\', ';');
+
+        var d = v.Any(e => e.Contains("wool", StringComparison.OrdinalIgnoreCase));
+
+        var expenseRule1 = _expRule
+            .Where(rule => rule.SearchText.Contains("Woolworths", StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefault();
+
+         */
+        #endregion
+    }
+
+    void CheckAllExpense_selected(bool headerChecked, object checkValue)
+    {
+        _iCount = 0;
+        bool isChecked = (bool)checkValue;
+        //Ref: Change all value for a list items 
+        _extendedExpenses.ToList().ForEach(e => e.IsChecked = isChecked);
+
+    }
+    void CheckSingleExpense_selected(ExpenseCheckedExtension exp, object checkValue)
+    {
+        _iCount = 0;
+
+        bool isChecked = (bool)checkValue;
+        exp.IsChecked = isChecked;
+    }
+    void HandleFileSelected(IFileListEntry[] files)
+    {
+        _file = files.FirstOrDefault();
+        _status = $"File:{_file.Name} has last modified date: {_file.LastModified.ToShortDateString()}\n"+
+            $"Content type (not always supplied by the browser): {_file.Type}";
+
+    }
+    async Task UploadDataIntoPage()
+    {
+        string fileContent = string.Empty;
+        string lineDate = string.Empty;
+        var numLines = 0;
+        _iCount = 0;
+        _extendedExpenses = new List<ExpenseCheckedExtension>();
+
+        try
+        {
+            var default_cur = configuration["DefaultCurrency"];
+            var default_cat = configuration["DefaultCategory"];
+            var default_typ = configuration["DefaultPaymentType"];
+            var default_mth = configuration["DefaultPaymentMethod"];
+            var default_sig = configuration["DefaultSignature"];
+
+            if (_file != null)
+            {
+                using (var reader = new System.IO.StreamReader(_file.Data))
+                {
+                    while ((lineDate = await reader.ReadLineAsync()) != null)
+                    {
+                        var importLineValues = lineDate.Split(',', ';');
+                        var itemExpenseImportFile = new ExpenseCheckedExtension();
+
+                        //If Dedault not checked
+                        itemExpenseImportFile.IsChecked = false;
+
+                        if (importLineValues.Length > 2) //uploaded file should have minimum 3 items, Date, price and description.
+                        {
+                            itemExpenseImportFile.expense.ExpenseDate = DateTime.Parse(importLineValues[0].Trim());
+                            var expTitle = importLineValues[2].Trim().Trim('"');
+                            //System.Text.RegularExpressions.Regex.Match(importLineValues[1], @"\d+").Value;
+                            var expRuleObject = RuleEngine(expTitle);
+
+                            //var expenseRule1 = _expRule.Where(rule => rule.SearchText.Contains("woolworths"));
+                            itemExpenseImportFile.expense.ExpensesAmount = (-1) * double.Parse(System.Text.RegularExpressions.Regex.Match(importLineValues[1], @"(([-]|[+])?\d+[.]\d+)").Value);
+                            itemExpenseImportFile.expense.ExpenseTitle = importLineValues[2].Trim().Trim('"');
+                            itemExpenseImportFile.expense.Signature = default_sig;
+                            if (expRuleObject == null)
+                            {
+                                itemExpenseImportFile.expense.CurrencyId = int.Parse(default_cur);
+                                itemExpenseImportFile.expense.ExpenseCategoryId = int.Parse(default_cat);
+
+                                itemExpenseImportFile.expense.PaymentMethod = (ExpenseTracker.Data.PaymentMethod)Enum.Parse(typeof(ExpenseTracker.Data.PaymentMethod), default_mth);
+                                itemExpenseImportFile.expense.PaymentType = (ExpenseTracker.Data.PaymentType)Enum.Parse(typeof(ExpenseTracker.Data.PaymentType), default_typ);
+                            }
+                            else
+                            {
+                                itemExpenseImportFile.expense.CurrencyId = expRuleObject.CurrencyId;
+                                itemExpenseImportFile.expense.ExpenseCategoryId = expRuleObject.ExpenseCategoryId;
+
+                                itemExpenseImportFile.expense.PaymentMethod = expRuleObject.PaymentMethod;
+                                itemExpenseImportFile.expense.PaymentType = expRuleObject.PaymentType;
+                            }
+                        }
+                        _extendedExpenses.Add(itemExpenseImportFile);
+                        numLines++;
+
+                    }
+                    //fileContent = await reader.ReadToEndAsync();
+                }
+                _status = $"Finished loading {_file.Size} bytes from {_file.Name} with total lines {numLines}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _status = $"Error: {ex.Message}";
+            //throw ex;
         }
     }
-    
+    protected async Task HandleValidSubmit()
+    {
+        //Save only selected expense rows
+        var success = await srvExpense.BulkNewExpensesAsync(_extendedExpenses
+            .Where(i => i.IsChecked == true).Select(e => e.expense)
+            .ToList());
+
+        if (success)
+        {
+            var count = _extendedExpenses
+                .Where(i => i.IsChecked == true).Count();
+
+            _status = $"The select {count} expenses from the list has been saved.";
+        }
+    }
+
+}
+

@@ -25,4 +25,9 @@ namespace ExpenseTracker.Server.Shared
             return firstMonday.AddDays(weekOfYear * 7);
         }
     }
+    public class ExpenseCheckedExtension
+    {
+        public ExpenseTracker.Data.Expense expense = new ExpenseTracker.Data.Expense();
+        public bool IsChecked = true;
+    }
 }

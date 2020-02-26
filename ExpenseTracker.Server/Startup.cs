@@ -35,6 +35,7 @@ namespace ExpenseTracker.Server
 
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+            services.AddScoped<IExpenseRuleRepository, ExpenseRuleRepository>();
             services.AddScoped<IExpenseRepository, ExpenseRepository>();
 
             services.AddBlazorise(options => {      options.ChangeTextOnKeyPress = true; /*/ optional */ })

@@ -53,18 +53,6 @@
 </EditForm>
 
 <div class="container border border-info border-0">
-    <div class="row border border-info border-0">
-        <div class="w-100 border border-primary border-0"></div>
-
-        <div class="col-6  border border-primary border-0 text-center">
-            <ChartJsPieChart @ref="_pieChartJs" Config="@_pieConfig" Width="150" Height="150" />
-
-        </div>
-        <div class="col-6  border border-primary border-0 text-center">
-            <ChartJsPieChart @ref="_doughnutChartJs" Config="@_dnutConfig" Width="150" Height="150" />
-        </div>
-    </div>
-    <div class="w-100 border border-primary border-0"></div>
 
     <div class="row border border-info border-0">
         <div class="w-100 border border-primary border-0"></div>
@@ -76,6 +64,20 @@
             <ChartJsBarChart @ref="_barChartJs" Config="@_barConfig" Width="150" Height="150" />
         </div>
     </div>
+
+    <div class="w-100 border border-primary border-0"></div>
+
+    <div class="row border border-info border-0">
+        <div class="w-100 border border-primary border-0"></div>
+
+        <div class="col-6  border border-primary border-0 text-center">
+            <ChartJsPieChart @ref="_pieChartJs" Config="@_pieConfig" Width="150" Height="150" />
+
+        </div>
+        <div class="col-6  border border-primary border-0 text-center">
+            <ChartJsPieChart @ref="_doughnutChartJs" Config="@_dnutConfig" Width="150" Height="150" />
+        </div>
+    </div>
 </div>
 
 @code {
@@ -85,6 +87,7 @@
     //    protected DateTime endtDate { get; set; }
     //}
     //private AnalysisHelper _analysisHelper = new AnalysisHelper();
+
     private bool _hasError = false;
     private string _errorMsg = string.Empty;
 
@@ -135,6 +138,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        //TODO: Test and fix error when expense table is empty
         _endDate = _startDate.AddMonths(1).AddDays(-1);
         _hasError = false;
         _errorMsg = "";
@@ -202,18 +206,28 @@
                 Title = new OptionsTitle
                 {
                     Display = true,
-                    Text = "Weekly Expense categories collection"
+                    Text = "Weekly Expense categories collection (5 weeks max)"
                 },
                 Scales = new BarScales
                 {
                     XAxes = new List<CartesianAxis>
-{
+                    {
                         new BarCategoryAxis
                         {
                             BarThickness = BarThickness.Flex,
-                            Stacked = true
+                            Stacked = true,                            
                         }
-                    }
+                    },
+                    //YAxes = new List<CartesianAxis>
+                    //{
+                    //    new BarCategoryAxis
+                    //    {
+                    //       // BarThickness = BarThickness.Flex,
+                    //        Stacked = true,
+                    //       // Ticks = new ChartJs.Blazor.ChartJS.Common.Axes.Ticks.CategoryTicks { }
+                    //    }
+                    //}
+
                 },
                 Responsive = true
             }
@@ -318,7 +332,7 @@
         #endregion
 
         #region "Weekly basis top 5 categories expenses"
-
+        //TODO: Top 5 category wise, weekly expenses
         var bubbleChartData = _expenses.GroupBy(g => new
         {
             //GroupBy Weekly in the selected Period
@@ -335,6 +349,10 @@
 
         var expenseBubbleData = new List<BubbleDataset>();
 
+        if (_bubbleConfig.Data.Datasets != null)
+
+            _bubbleConfig.Data.Datasets.Clear();
+        //_bubbleConfig.Data.Datasets.RemoveAll();
 
         foreach (var weekly in bubbleChartData.Select(w => w.Week).Distinct())
         {
@@ -355,7 +373,7 @@
             };
 
             expenseBubbleData.Add(aBubbleDataset);
-            Console.WriteLine(weekly);
+            //System.Diagnostics.Debug.WriteLine(weekly);
         }
 
         //_bubbleConfig.Data.Datasets.Clear();
@@ -379,18 +397,21 @@
         CategoryId = e.First().ExpenseCategoryId
     }).OrderBy(o => o.Week).ThenBy(o => o.CategoryName);
 
-
+        //TODO: bug to fix, if week falls in more then one year, date lable is wrong
         //bubbleChartData.Select(w => "Week-"+ w.Week).Distinct().ToArray();
         //string[] s = new[] { "JAG", "DIV" };
 
         var allCategories = barChartData.Select(c => c.CategoryName).Distinct().OrderBy(i => i);
         var allWeeks = barChartData.Select(w => w.Week).Distinct();
 
-        foreach (var weekly in barChartData.Select(w => w.Week).Distinct())
+        _barConfig.Data.Labels.Clear();
+        //Show only 5 weeks of data, meaning 4 bars maximum.
+        foreach (var weekly in barChartData.Select(w => w.Week).Distinct().Take(5))
         {
-            _barConfig.Data.Labels.Add(ExpenseTrackerHelper.FirstDateOfWeek(_startDate.Year, weekly).ToString("dd-MMM-yy"));
+            _barConfig.Data.Labels.Add(ExpenseTrackerHelper.FirstDateOfWeek(_startDate.Year, weekly).AddDays(7).ToString("dd-MMM-yy"));
         }
 
+        _barConfig.Data.Datasets.Clear();
         foreach (var cat in allCategories)
         {
             int iCount = 0;

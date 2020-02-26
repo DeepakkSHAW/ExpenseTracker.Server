@@ -86,4 +86,26 @@ namespace ExpenseTracker.Data
         public Currency Currency { get; set; }
 
     }
+
+
+    /// <summary>
+    ///This is stand alone table to hold expense rules.
+    ///To identify expense title belongs to which category, currency, payment type & methods  
+    /// </summary>
+    public class ExpenseRule
+    {
+        public int Id { get; set; }
+        public bool IsActiveRule { get; set; } = false;
+        public string RuleName { get; set; }
+        public string SearchText { get; set; }
+        public int ExpenseCategoryId { get; set; }
+        public int CurrencyId { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
+        public PaymentType PaymentType { get; set; }
+        //only for audit purposes
+        public DateTime inDate { get; private set; } = DateTime.Now;
+        //only for audit purposes
+        public DateTime updateDate { get; set; } = DateTime.Now;
+
+    }
 }
