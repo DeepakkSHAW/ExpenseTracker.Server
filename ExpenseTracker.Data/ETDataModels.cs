@@ -96,9 +96,18 @@ namespace ExpenseTracker.Data
     {
         public int Id { get; set; }
         public bool IsActiveRule { get; set; } = false;
+        [Required]
+        [Range(0, 100, ErrorMessage = "Zero is the Highest Priority and 100 is the lowest.")]
+        public int Priority { get; set; } = 0; // Zero is the Highest Priority
+        [Required(ErrorMessage = "Rule Name can't be Empty")]
+        [StringLength(20, ErrorMessage = "Rule Name too long (20 char max).")]
         public string RuleName { get; set; }
+        [Required(ErrorMessage = "Rule can't be Empty")]
+        [StringLength(50, ErrorMessage = "Defined Rule is too long (255 char max).")]
         public string SearchText { get; set; }
+        public ExpenseCategory ExpenseCategory { get; set; }
         public int ExpenseCategoryId { get; set; }
+        public Currency Currency { get; set; }
         public int CurrencyId { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
         public PaymentType PaymentType { get; set; }

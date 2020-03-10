@@ -124,6 +124,8 @@
         _categories = (await srvCategory.GetCategoriesAsync(true)).ToList();
         _currencies = (await srvCurrency.GetCurrencyAsync(true)).ToList();
         _expRule = (await srvExpRule.GetExpenseRulesAsync()).ToList();
+
+        //var debug_check = (await srvExpRule.GetExpenseRulesAsync()).ToList().OrderBy(x => x.Priority);
     }
 
     protected ExpenseTracker.Data.ExpenseRule RuleEngine(string expTitle)

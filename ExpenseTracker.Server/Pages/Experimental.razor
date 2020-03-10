@@ -4,117 +4,139 @@
 @using Blazorise.Charts
 
 <h3>Experimental Page</h3>
-<br />
-A
-<table class="table border-dark-2 text-sm">
-    <thead >
-        <tr>
-            <th class="m-0 p-0 text-lg-center" >H1</th>
-            <th class="m-0 p-0" >H2</th>
-            <th class="m-0 p-0">H3</th>
-        </tr>
-    </thead>
-    <tbody >
+<div class="container border border-primary">
+    <div class="row border border-primary">
+        <div class="col-9  border border-primary">DK</div>
+        <div class="col  border border-primary">Rups</div>
+        <div class="w-100 border border-primary"></div>
+        <div class="col border border-primary">Jag</div>
+        <div class="col border border-primary">Divs</div>
+        <div class="w-100 border border-primary"></div>
+        <div class="col border border-primary">poc</div>
+    </div>
+</div>
 
-        <tr class="">
-            <td class="m-0 p-0">RS</td>
-            <th class="m-0 p-0">DK            </th>
-            <td class="m-0 p-0"><button id="dummy"><i class="oi oi-dollar"></i></button></td>
-        </tr>
-        <tr class="">
-            <td class="">JS</td>
-            <td class="">DS</td>
-            <td><button id="dummy"><i class="oi oi-trash"></i></button></td>
-        </tr>
-    </tbody>
-    </table>
-B
-<br />
-                    <div class="container border border-primary">
-                        <div class="row border border-primary">
-                            <div class="col-9  border border-primary">DK</div>
-                            <div class="col  border border-primary">Rups</div>
-                            <div class="w-100 border border-primary"></div>
-                            <div class="col border border-primary">Jag</div>
-                            <div class="col border border-primary">Divs</div>
-                            <div class="w-100 border border-primary"></div>
-                            <div class="col border border-primary">poc</div>
-                        </div>
-                    </div>
+<button type="button" class="btn btn-tumblr"><span class="cib-tumblr btn-icon mr-2"></span> Tumblr</button>
+<br>
+<button class="btn btn-primary float-right search disabled" disabled><span class='fa-left fas fa-sync-alt spinning'></span>Searching...</button>
+<br>
 
-                    <button type="button" class="btn btn-tumblr"><span class="cib-tumblr btn-icon mr-2"></span> Tumblr</button>
-                    <br>
-                    <button class="btn btn-primary float-right search disabled" disabled><span class='fa-left fas fa-sync-alt spinning'></span>Searching...</button>
-                    <br>
-
-                    @*<ETDashBoard title="Expense Tracker Dash Board" />*@
+@*<ETDashBoard title="Expense Tracker Dash Board" />*@
 
 
-                    @*<Input type="button" Clicked="@(async () => await HandleRedraw())">Redraw</input>*@
-                    <input type="range" step="1"
-                           @bind-value="SliderValue"
-                           @bind-value:event="oninput" />
-                    <p>Slider Value: <b>@SliderValue</b></p>
+@*<Input type="button" Clicked="@(async () => await HandleRedraw())">Redraw</input>*@
+<input type="range" step="1"
+       @bind-value="SliderValue"
+       @bind-value:event="oninput" />
+<p>Slider Value: <b>@SliderValue</b></p>
 
-                    <div class="card" style="width: 24rem;">
-                        <div class="card-body m-0 p-0">
-                            <LineChart @ref="lineChart" TItem="double" />
-                        </div>
-                    </div>
-                    <a class="btn btn-outline-primary" @onclick="@(async () => await HandleRedraw())">Reload</a>
+<div class="card" style="width: 24rem;">
+    <div class="card-body m-0 p-0">
+        <LineChart @ref="lineChart" TItem="double" />
+    </div>
+</div>
+<a class="btn btn-outline-primary" @onclick="@(async () => await HandleRedraw())">Reload</a>
 
-                    @code {
-                        int SliderValue = 0;
+<div class="container border-0 border-primary">
+    <div class="row border-0 border-primary">
+        <div class="col border-0 border-primary">
+            <InputFile class="btn btn-primary m-2" OnChange="HandleFileSelected" accept=".csv" />
+            <button class="btn btn-outline-primary m-2 oi oi-timer" @onclick="UploadDataIntoPage">Upload File</button>
+        </div>
+        <div class="col border-0 border-primary">
+            @if (_file != null)
+            {
+                <textarea class="form-control border-info text-sm-left" @bind=@_status placeholder="upload status" cols="3"></textarea>
+                @*<div class="col bg-light rounded border border-success text-center">
+                       <p>@_status</p>
+                    </div>*@
+            }
+        </div>
+    </div>
+</div>
 
-                protected override async Task OnInitializedAsync()
-                    {
-                    }
+@code {
+    int SliderValue = 0;
+    IFileListEntry _file;
+    string _status;
+    void HandleFileSelected(IFileListEntry[] files)
+    {
+        _file = files.FirstOrDefault();
+        _status = $"File:{_file.Name} has last modified date: {_file.LastModified.ToShortDateString()}\n" +
+            $"Content type (not always supplied by the browser): {_file.Type}";
+
+    }
+    async Task UploadDataIntoPage()
+    {
+        string fileContent = string.Empty;
+        string lineDate = string.Empty;
+        var numLines = 0;
 
 
-                    LineChart<double> lineChart;
 
-                    protected override async Task OnAfterRenderAsync(bool firstRender)
-                    {
-                        if (firstRender)
-                        {
-                            await HandleRedraw();
-                        }
-                    }
+        if (_file != null)
+        {
+            using (var reader = new System.IO.StreamReader(_file.Data))
+            {
+                while ((lineDate = await reader.ReadLineAsync()) != null)
+                {
+                    numLines++;
+                }
+            }
+            _status = $"Finished loading {_file.Size} bytes from {_file.Name} with total lines {numLines}";
+        }
 
-                    async Task HandleRedraw()
-                    {
-                        lineChart.Clear();
 
-                        lineChart.AddLabel(Labels);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+    }
 
-                        lineChart.AddDataSet(GetLineChartDataset());
 
-                        await lineChart.Update();
-                    }
+    LineChart<double> lineChart;
 
-                    LineChartDataset<double> GetLineChartDataset()
-                    {
-                        return new LineChartDataset<double>
-                        {
-                            Label = "# of randoms",
-                            Data = RandomizeData(),
-                            BackgroundColor = backgroundColors,
-                            BorderColor = borderColors,
-                            Fill = true,
-                            PointRadius = 2,
-                            BorderDash = new List<int> { }
-                        };
-                    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await HandleRedraw();
+        }
+    }
 
-                    string[] Labels = { "Red", "Blue", "Yellow", "Green", "Purple", "Orange" };
-                    List<string> backgroundColors = new List<string> { ChartColor.FromRgba(255, 99, 132, 0.2f), ChartColor.FromRgba(54, 162, 235, 0.2f), ChartColor.FromRgba(255, 206, 86, 0.2f), ChartColor.FromRgba(75, 192, 192, 0.2f), ChartColor.FromRgba(153, 102, 255, 0.2f), ChartColor.FromRgba(255, 159, 64, 0.2f) };
-                    List<string> borderColors = new List<string> { ChartColor.FromRgba(255, 99, 132, 1f), ChartColor.FromRgba(54, 162, 235, 1f), ChartColor.FromRgba(255, 206, 86, 1f), ChartColor.FromRgba(75, 192, 192, 1f), ChartColor.FromRgba(153, 102, 255, 1f), ChartColor.FromRgba(255, 159, 64, 1f) };
+    async Task HandleRedraw()
+    {
+        lineChart.Clear();
 
-                    List<double> RandomizeData()
-                    {
-                        var r = new Random(DateTime.Now.Millisecond);
+        lineChart.AddLabel(Labels);
 
-                        return new List<double> { r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble() };
-                    }
+        lineChart.AddDataSet(GetLineChartDataset());
 
-                    }
+        await lineChart.Update();
+    }
+
+    LineChartDataset<double> GetLineChartDataset()
+    {
+        return new LineChartDataset<double>
+        {
+            Label = "# of randoms",
+            Data = RandomizeData(),
+            BackgroundColor = backgroundColors,
+            BorderColor = borderColors,
+            Fill = true,
+            PointRadius = 2,
+            BorderDash = new List<int> { }
+        };
+    }
+
+    string[] Labels = { "Red", "Blue", "Yellow", "Green", "Purple", "Orange" };
+    List<string> backgroundColors = new List<string> { ChartColor.FromRgba(255, 99, 132, 0.2f), ChartColor.FromRgba(54, 162, 235, 0.2f), ChartColor.FromRgba(255, 206, 86, 0.2f), ChartColor.FromRgba(75, 192, 192, 0.2f), ChartColor.FromRgba(153, 102, 255, 0.2f), ChartColor.FromRgba(255, 159, 64, 0.2f) };
+    List<string> borderColors = new List<string> { ChartColor.FromRgba(255, 99, 132, 1f), ChartColor.FromRgba(54, 162, 235, 1f), ChartColor.FromRgba(255, 206, 86, 1f), ChartColor.FromRgba(75, 192, 192, 1f), ChartColor.FromRgba(153, 102, 255, 1f), ChartColor.FromRgba(255, 159, 64, 1f) };
+
+    List<double> RandomizeData()
+    {
+        var r = new Random(DateTime.Now.Millisecond);
+
+        return new List<double> { r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble(), r.Next(3, 50) * r.NextDouble() };
+    }
+
+}

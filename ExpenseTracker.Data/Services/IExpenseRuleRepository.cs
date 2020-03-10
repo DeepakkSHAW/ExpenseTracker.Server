@@ -10,5 +10,8 @@ namespace ExpenseTracker.Data.Services
         Task<IEnumerable<ExpenseRule>> GetExpenseRulesAsync();
         Task<ExpenseRule> GetExpenseRuleAsync(int id);
         Task<ExpenseRule> FindExpenseAsync(string toFind);
+        Task<int> NewExpenseRuleAsync(ExpenseRule expenseRule);
+        Task<bool> UpdateExpenseRuleAsync(ExpenseRule expenseRule, int id);
+        Task<int> DeleteExpenseRuleAsync(int id);
     }
 }

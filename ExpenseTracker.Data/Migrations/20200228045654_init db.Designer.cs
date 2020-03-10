@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ExpenseTracker.Data.Migrations
 {
     [DbContext(typeof(ETDBContext))]
-    [Migration("20200225025848_db init")]
-    partial class dbinit
+    [Migration("20200228045654_init db")]
+    partial class initdb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -265,6 +265,9 @@ namespace ExpenseTracker.Data.Migrations
                     b.Property<int>("PaymentType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<uint>("Priority")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("RuleName")
                         .HasColumnType("TEXT");
 
@@ -279,6 +282,10 @@ namespace ExpenseTracker.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("ExpenseCategoryId");
+
                     b.ToTable("ExpenseRules");
 
                     b.HasData(
@@ -290,10 +297,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 1u,
                             RuleName = "Grocery Rule",
                             SearchText = "coles,woolworths,kt mart, ALDI, MARKET, BAZAAR",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 479, DateTimeKind.Local).AddTicks(4917),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(5143)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 623, DateTimeKind.Local).AddTicks(6954),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 625, DateTimeKind.Local).AddTicks(9251)
                         },
                         new
                         {
@@ -303,10 +311,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 0u,
                             RuleName = "the restaurant-Rule",
                             SearchText = "DOMINOS, PIZZA, CAFE, BURGERS, KFC, CHILLI, SWEETS, RED ROOSTER,",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8536),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8551)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3311),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3334)
                         },
                         new
                         {
@@ -316,10 +325,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 2u,
                             RuleName = "Transport-Rule",
                             SearchText = "TRANSPORT, TRAIN, AIRPORT, SHIP, BUS",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8612),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8615)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3410),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3413)
                         },
                         new
                         {
@@ -329,10 +339,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 5,
                             PaymentType = 0,
+                            Priority = 3u,
                             RuleName = "Gift-Rule",
                             SearchText = "ebay",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8619),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8621)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3417),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3419)
                         },
                         new
                         {
@@ -342,10 +353,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 4u,
                             RuleName = "medical-Rule",
                             SearchText = "CHEMIST,DENTAL,doctor",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8624),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8627)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3422),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3425)
                         },
                         new
                         {
@@ -355,10 +367,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 5u,
                             RuleName = "Insurance-Rule",
                             SearchText = "INSURANCE, BUPA,LIC",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8629),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8632)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3428),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3431)
                         },
                         new
                         {
@@ -368,10 +381,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 9u,
                             RuleName = "Clothing-Rule",
                             SearchText = "Target, MALL",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8635),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8637)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3434),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3437)
                         },
                         new
                         {
@@ -381,10 +395,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 6u,
                             RuleName = "Education-Rule",
                             SearchText = "School, OFFICEWORKS",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8640),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8642)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3440),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3443)
                         },
                         new
                         {
@@ -394,10 +409,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 7u,
                             RuleName = "Utilities-Rule",
                             SearchText = "ENERGY, CITYWATER",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8645),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8647)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3446),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3449)
                         },
                         new
                         {
@@ -407,10 +423,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 11u,
                             RuleName = "comm-Rule-AU",
                             SearchText = "AMAYSIM,Internet",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8650),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8652)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3452),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3455)
                         },
                         new
                         {
@@ -420,10 +437,11 @@ namespace ExpenseTracker.Data.Migrations
                             IsActiveRule = true,
                             PaymentMethod = 1,
                             PaymentType = 0,
+                            Priority = 20u,
                             RuleName = "comm-Rule-IND",
                             SearchText = "jio,airtel",
-                            inDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8656),
-                            updateDate = new DateTime(2020, 2, 25, 13, 58, 48, 481, DateTimeKind.Local).AddTicks(8658)
+                            inDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3458),
+                            updateDate = new DateTime(2020, 2, 28, 15, 56, 54, 626, DateTimeKind.Local).AddTicks(3461)
                         });
                 });
 
@@ -447,6 +465,21 @@ namespace ExpenseTracker.Data.Migrations
                     b.HasOne("ExpenseTracker.Data.Expense", "Expense")
                         .WithOne("ExpenseDetail")
                         .HasForeignKey("ExpenseTracker.Data.ExpenseDetail", "ExpenseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ExpenseTracker.Data.ExpenseRule", b =>
+                {
+                    b.HasOne("ExpenseTracker.Data.Currency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ExpenseTracker.Data.ExpenseCategory", "ExpenseCategory")
+                        .WithMany()
+                        .HasForeignKey("ExpenseCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

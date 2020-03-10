@@ -20,7 +20,8 @@ namespace ExpenseTracker.Data.Services
             {
                 try
                 {
-                    _ctx.BulkInsert(expenses);
+                   // _ctx.BulkInsert(expenses);
+                   await _ctx.BulkInsertAsync(expenses);
                     vReturn = true;
                 }
                 catch (Exception)

@@ -10,7 +10,12 @@
     <PackageTags>6-FEB-2020</PackageTags>
     <ApplicationIcon>wwwroot\MONEY.ICO</ApplicationIcon>
   </PropertyGroup>
-
+  
+  <!-- improve your development experience with Blazor-->
+  <PropertyGroup>
+    <BlazorLinkOnBuild  Condition="'$(Configuration)'!='Release'">false</BlazorLinkOnBuild>
+  </PropertyGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\ExpenseTracker.Data\ExpenseTracker.Data.csproj" />
   </ItemGroup>

@@ -1,0 +1,345 @@
+﻿@page "/ExpenseRules"
+@inject Microsoft.Extensions.Configuration.IConfiguration configuration
+@using System.IO
+@using System.Text
+@using ExpenseTracker.Server.Components
+
+<AlertDialog @ref="DeleteConfirmation" CloseEventCallback="@AlertDialog_OnDialogClose"
+             dialogTitle="Delete Confirmation!" />
+
+@if (_expRule != null)
+{
+    <EditForm Model="@_expRule" OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-group row p-1 m-1 align-middle">
+            <label for="ruleName" class="col-sm-2">Rule Name</label>
+            <input type="text" maxlength="20" class="form-control col-sm-2"
+                   placeholder="Rule Name (Hints about Rule)" @bind-value="@_expRule.RuleName" />
+
+            <input type="checkbox" class="form-control form-control-sm col-sm-1" id="@_expRule.Id"
+                   @bind="@_expRule.IsActiveRule"
+                   @oninput="@(async (e)=> await ActiveRule_OnInput(e, _expRule))" />
+
+            <label for="ruleActive" class="col-sm-2">Is Active Rule</label>
+
+            <label for="ruleActive" class="col-sm-2 text-right">Priority</label>
+            <InputSelectNumber id="priority" class="form-control form-control-sm col-sm-1" @bind-Value="@_expRule.Priority">
+                @foreach (var pri in _Priorities)
+                    {
+                    <option value="@pri">-- @pri --</option>
+                    }
+                /**/
+            </InputSelectNumber>
+        </div>
+
+        <div class="form-group row p-0 m-1">
+            <label for="rulesearch" class="col-sm-2">Rule: </label>
+            <input type="text" maxlength="20" class="form-control col-sm-3"
+                   placeholder="Multiple search rules can be seperated by ' ', ',', '\\', ';' " @bind-value="@_expRule.SearchText" />
+        </div>
+
+        <div class="form-group row p-0 m-1">
+            <label for="country" class="col-sm-2">Categories: </label>
+            <InputSelectNumber id="Category" class="form-control col-sm-4" @bind-Value="@_expRule.ExpenseCategoryId">
+                <option value=-1>Select a category</option>
+                @foreach (var cat in _categories)
+                    {
+                    <option value="@cat.Id">@cat.Category</option>
+                    }
+                /**/
+            </InputSelectNumber>
+
+            <label for="currency" class="col-sm-2">Currency: </label>
+            <InputSelectNumber id="currency" class="form-control col-sm-4" @bind-Value="@_expRule.CurrencyId">
+                @foreach (var car in _currencies)
+                    {
+                    <option value="@car.Id">@car.CurrencyName</option>
+                    }
+                /**/
+            </InputSelectNumber>
+        </div>
+
+        <div class="form-group row p-0 m-1">
+            <label for="paytype" class="col-sm-2">Payment Type: </label>
+            <InputSelectNumber id="paytype" class="form-control col-sm-4" @bind-Value="@_PaymentType"
+                               @onchange="PaymentType_Change">
+                @foreach (var pt in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentType)))
+                    {
+                    <option value="@(Convert.ToInt32(pt))">@pt</option>
+                    // @s = $"Value: ";// {Convert.ToInt32(pt)} Item: {pt}";
+                }
+                @*@foreach (var entry in _PayType)
+                    {
+                    <option value="@entry.Key">@entry.Value</option>
+                    }*@
+            </InputSelectNumber>
+
+            <label for="paymethod" class="col-sm-2">Payment Method: </label>
+            <InputSelectNumber id="paymethod" class="form-control col-sm-4" @bind-Value="@_PaymentMethod">
+                @_expRule.PaymentMethod = @_PaymentMethod
+                @foreach (var pm in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentMethod)))
+                    {
+                    <option value="@(Convert.ToInt32(pm))">@pm</option>
+                    //Enum.GetValues(typeof(Data.PaymentMethod))_expRule.PaymentMethod
+                }
+            </InputSelectNumber>
+        </div>
+
+        <button type="submit" class="btn btn-primary p-1 m-2"> @_SaveTitle </button>
+
+    </EditForm>
+}
+
+<table class="table table-active table-responsive-sm table-hover">
+    <thead class="thead-dark rounded">
+        <tr>
+            <th class="m-0 p-0 text-left visible">
+                <span class="d-lg-inline-block" data-toggle="tooltip" title="Add a new Rule">
+                    <button @onclick="@(e => NewRule_Clicked(e))" data-toggle="button"
+                            class="btn btn-lg oi oi-pencil btn-outline-warning p-1 m-1">
+                        &nbsp;NR&nbsp;
+                    </button>
+                </span>
+            </th>
+            <th class="m-0 p-0 text-left">Active Rule</th>
+            <th class="m-0 p-0 text-center">Priority</th>
+            <th class="m-0 p-0 text-left">Rule Title</th>
+            <th class="m-0 p-0 text-left">Rule Text</th>
+            <th class="m-0 p-0 text-left">Category</th>
+            <th class="m-0 p-0 text-center">Currency</th>
+            <th class="m-0 p-0 text-center">Payment Method</th>
+            <th class="m-0 p-0 text-center">Payment Type</th>
+        </tr>
+    </thead>
+    @if (_expRules != null)
+    {
+        <tbody>
+            @foreach (var rule in _expRules)
+            {
+                var cat = _categories.Where(e => e.Id == rule.ExpenseCategoryId).Select(f => f.Category).FirstOrDefault();
+                var cur = _currencies.Where(e => e.Id == rule.CurrencyId).Select(f => f.CurrencyName).FirstOrDefault();
+                var pm = rule.PaymentMethod;
+                var pt = rule.PaymentType;
+                <tr>
+                    <td class="p-0 m-0">
+                        <span class="d-lg-inline-block" data-toggle="tooltip" title="Update Rule">
+                            <button @onclick="@(() => RuleUpdate_Clicked(rule.Id))" class="btn btn-sm oi oi-pencil btn-outline-success" data-toggle="modal" data-target="#AddEditEmpModal" />
+                        </span>
+                        <span class="d-lg-inline-block" data-toggle="tooltip" title="Delete Rule">
+                            <button @onclick="@(() => RuleDelete_Clicked(rule.Id))" class="btn btn-sm oi oi-trash btn-outline-danger" data-toggle="modal" data-target="#deleteEmpModal" />
+                        </span>
+                    </td>
+                    <td class="p-0 m-0 text-left">@rule.IsActiveRule</td>
+                    <td class="p-0 m-0 text-center">@rule.Priority</td>
+                    <td class="text-left p-0 m-0">@rule.RuleName</td>
+                    <td class="text-left p-0 m-0">@rule.SearchText</td>
+                    <td class="text-left p-0 m-0">
+                        @*<InputSelectNumber id="Category" @bind-Value="@rule.ExpenseCategoryId">
+                                @foreach (var cat in _categories)
+                                        {
+                                    <option value="@cat.Id">@cat.Category</option>
+                                        }
+
+                            </InputSelectNumber>*@
+                        @cat
+                    </td>
+                    <td class="text-center p-0 m-0">
+                        @*<InputSelectNumber id="currency" @bind-Value="@rule.CurrencyId">
+                                @foreach (var cur in _currencies)
+                                        {
+                                    <option value="@cur.Id">@cur.CurrencyName</option>
+                                        }
+                            </InputSelectNumber>*@
+                        @cur
+                    </td>
+                    <td class="text-center p-0 m-0">
+                        @*<InputSelect id="paymethod" @bind-Value="@rule.PaymentMethod">
+                               @foreach (var pm in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentMethod)))
+                                        {
+                                    <option value="@pm">@pm</option>
+                                        }
+                            </InputSelect>*@
+                        @pm
+                    </td>
+                    <td class="text-center p-0 m-0">
+                        @*<InputSelect id="paytype" @bind-Value="@rule.PaymentType">
+                                @foreach (var pt in Enum.GetValues(typeof(ExpenseTracker.Data.PaymentType)))
+                                        {
+                                    <option value="@pt">@pt</option>
+                                        }
+                            </InputSelect>*@
+                        @pt
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    }
+    else
+    {
+        <tbody>Loading Rules..</tbody>
+    }
+</table>
+@*<button type="submit" class="btn btn-primary"> Save uploaded Expenses </button>*@
+
+@code {
+    [Inject]
+    private Data.Services.IExpenseRuleRepository srvExpRule { get; set; }
+    private List<Data.ExpenseRule> _expRules;
+    private Data.ExpenseRule _expRule;
+
+    [Inject]
+    protected ExpenseTracker.Data.Services.ICategoryRepository srvCategory { get; set; }
+    protected List<ExpenseTracker.Data.ExpenseCategory> _categories;
+    [Inject]
+    protected ExpenseTracker.Data.Services.ICurrencyRepository srvCurrency { get; set; }
+    protected List<ExpenseTracker.Data.Currency> _currencies;
+
+
+
+    //private int _CategoryId = -1;
+    //private int _CurrencyId = -1;
+    //private int _Priority = 10;
+    private string _PaymentType = string.Empty;
+    private string _PaymentMethod = string.Empty;
+    //private string _RuleName = string.Empty;
+    //private string _theRule = string.Empty;
+    //private bool _IsRuleActive = false;
+    private string _SaveTitle = " Save ";
+    private List<int> _Priorities; // = Enumerable.Range(0, 10).ToList();
+                                   //private Dictionary<int, string> _PayType = new Dictionary<int, string>();
+                                   //private Dictionary<int, string> _PayMethod = new Dictionary<int, string>();
+
+    protected AlertDialog DeleteConfirmation { get; set; }
+    protected async Task AlertDialog_OnDialogClose(bool e)
+    {
+        if (e)
+        {
+            //Confrim
+            if (_expRule != null)
+            {
+                await srvExpRule.DeleteExpenseRuleAsync(_expRule.Id);
+                //*Ref: Remove item from display list without fetching again from Database *//
+                _expRules.RemoveAll(x => x.Id == _expRule.Id);
+
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            //Declien delete
+        }
+        ClearInputForm();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = (await srvCategory.GetCategoriesAsync(true)).ToList();
+        _currencies = (await srvCurrency.GetCurrencyAsync(true)).ToList();
+        _expRules = (await srvExpRule.GetExpenseRulesAsync()).ToList();
+
+        //*Ref: Auto Interger list generator *//
+        _Priorities = Enumerable.Range(0, 100).ToList();
+
+        //*Hint: Convert Enum to Dictionary Object*//
+        //_PayType = Enum.GetValues(typeof(ExpenseTracker.Data.PaymentType))
+        //   .Cast<ExpenseTracker.Data.PaymentType>()
+        //   .ToDictionary(t => (int)t, t => t.ToString());
+
+        //_PayMethod = Enum.GetValues(typeof(ExpenseTracker.Data.PaymentMethod))
+        //   .Cast<ExpenseTracker.Data.PaymentMethod>()
+        //   .ToDictionary(t => (int)t, t => t.ToString());
+
+        //*Hint: Prepare Dictionary Object to fill DropDown with Interger values for Priorities *//
+        //Dictionary<int, string> _PrioritiesD;
+        //_PrioritiesD = new Dictionary<int, string>();
+        //for (int i = 0; i <= 100; i++)
+        //    _PrioritiesD.Add(i, $"-- {i} --");
+
+
+        //_CurrencyName = srvCategory.GetExpenseCategoryAsync()
+    }
+    protected async Task HandleValidSubmit()
+    {
+        var id = _expRule?.Id ?? -1;
+
+        _expRule.PaymentType = (Data.PaymentType)Enum.Parse(typeof(Data.PaymentType), _PaymentType);
+        _expRule.PaymentMethod = (Data.PaymentMethod)Enum.Parse(typeof(Data.PaymentMethod), _PaymentMethod);
+
+        if (id > 0) //Updated
+        {
+            await srvExpRule.UpdateExpenseRuleAsync(_expRule, _expRule.Id);
+        }
+        else //Insert
+        {
+            id = await srvExpRule.NewExpenseRuleAsync(_expRule);
+            _expRules = (await srvExpRule.GetExpenseRulesAsync()).ToList();
+        }
+        //_expRule = _expRules.Where(e => e.Id == -1).FirstOrDefault();
+        ClearInputForm();
+    }
+    private async Task NewRule_Clicked(System.EventArgs e)
+    {
+        string title = e.ToString();
+
+        //if (title.Contains("new"))
+        //    _expRule = new Data.ExpenseRule();
+        //else
+        //    _expRule = null;
+        ClearInputForm();
+
+    }
+    private async Task RuleUpdate_Clicked(int id)
+    {
+        _expRule = _expRules.Where(e => e.Id == id).FirstOrDefault();
+
+        //TODO: check global veriables may not needed
+        if (_expRule != null)
+        {
+            //_RuleName = _expRule.RuleName;
+            //_theRule = _expRule.SearchText;
+            //_IsRuleActive = _expRule.IsActiveRule;
+            //_CategoryId = _expRule.ExpenseCategoryId;
+            //_CurrencyId = _expRule.CurrencyId;
+            _PaymentMethod = ((int)_expRule.PaymentMethod).ToString();
+            _PaymentType = ((int)_expRule.PaymentType).ToString();
+        }
+        _SaveTitle = " Update ";
+    }
+    private async Task RuleDelete_Clicked(int id = -1)
+    {
+        _expRule = _expRules.Where(e => e.Id == id).FirstOrDefault();
+        string msg = "Are you sure, want to delete selected Rule";
+        await DeleteConfirmation.Show(msg);
+    }
+    private void PaymentType_Change(object selectedValue)
+    {
+    }
+    public async Task PaymentType_Change(ChangeEventArgs e)
+    {
+        //Does nothing experimental event
+    }
+
+    private void ClearInputForm()
+    {
+        var default_cur = configuration["DefaultCurrency"];
+        var default_cat = configuration["DefaultCategory"];
+        var default_typ = configuration["DefaultPaymentType"];
+        var default_mth = configuration["DefaultPaymentMethod"];
+
+        _expRule = new Data.ExpenseRule();
+
+        _expRule.CurrencyId = int.Parse(default_cur);
+        _expRule.ExpenseCategoryId = int.Parse(default_cat);
+        _expRule.PaymentMethod = (ExpenseTracker.Data.PaymentMethod)Enum.Parse(typeof(ExpenseTracker.Data.PaymentMethod), default_mth);
+        _expRule.PaymentType = (ExpenseTracker.Data.PaymentType)Enum.Parse(typeof(ExpenseTracker.Data.PaymentType), default_typ);
+        _expRule.Priority = 10;
+        _SaveTitle = " Save ";
+    }
+    private async Task ActiveRule_OnInput(ChangeEventArgs e, Data.ExpenseRule expRule)
+    {
+        //Console.WriteLine(e.Value);
+        //Reserve Checkbox checked event
+    }
+}
+

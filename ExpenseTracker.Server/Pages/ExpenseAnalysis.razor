@@ -215,7 +215,7 @@
                         new BarCategoryAxis
                         {
                             BarThickness = BarThickness.Flex,
-                            Stacked = true,                            
+                            Stacked = true,
                         }
                     },
                     //YAxes = new List<CartesianAxis>
@@ -271,6 +271,7 @@
     private async Task ChartRedraw()
     {
         _expenses = (await srvExpense.GetExpensesAsync(_startDate, _endDate)).ToList();
+        if (_expenses.Count() == 0) return;
 
         _avgExpenses = _expenses.Sum(e => e.ExpensesAmount) / (_endDate - _startDate).TotalDays;
         _higExpenses = _expenses.Max(e => e.ExpensesAmount);
