@@ -1,0 +1,265 @@
+﻿
+@foreach (var years in _expTree.GroupBy(y => y.dataRange.Year))
+{
+    <div class="oi oi-caret-@CollapseIcon(Operator.YEARLY, new DateTime(years.Key, 1, 1)) border-1 ml-0 p-1" id="@years.Key"
+         @onclick="@(e => Collapse_Clicked(e, Operator.YEARLY, new DateTime(years.Key, 1, 1)))">
+        <b>@years.Key</b>
+    </div>
+    <br>
+
+    foreach (var months in years.GroupBy(m => m.dataRange.Month))
+    {
+        <div class="panel panel-default border @months.Select(e => e.YearCollapsed).FirstOrDefault()">
+
+            <div class="oi oi-caret-@CollapseIcon(Operator.MONTHLY, new DateTime(years.Key, months.Key, 1)) border-1 ml-2 p-1" id="@months.Key"
+                 @onclick="@(e => Collapse_Clicked(e, Operator.MONTHLY, new DateTime(years.Key, months.Key, 1)))">
+                @GetMonthName(months.Key)
+            </div><br />
+
+            @foreach (var weeks in months.GroupBy(w => w.dataRange.AddDays(-(int)w.dataRange.DayOfWeek)))
+            {
+                <div class="panel panel-default border @weeks.Select(e => e.MonthCollapsed).FirstOrDefault()">
+
+                    <div class="oi oi-caret-@CollapseIcon(Operator.WEEKLY, weeks.Key) border-1 ml-3 p-1" id="@weeks.Key"
+                         @onclick="@(e => Collapse_Clicked(e, Operator.WEEKLY, weeks.Key))">
+                        W-<b>@GetWeekNumber(weeks.Key)</b>
+                        &nbsp;
+                        @weeks.Key.ToString("ddd dd-MMM-yy")
+                        &nbsp;
+                        [@weeks.Key.ToString("ddd dd-MMM-yy") - @weeks.Key.AddDays(6).ToString("ddd dd-MMM-yy")]
+                    </div><br />
+
+                    @foreach (var days in weeks)
+                    {
+                        <div class="panel panel-default border @weeks.Select(e => e.WeekCollapsed).FirstOrDefault()">
+
+                            <div class="oi oi-caret-@CollapseIcon(Operator.DAILY, days.dataRange) border-1 ml-4 p-1"
+                                 @onclick="@(async(e) => await Collapse_Clicked(e, Operator.DAILY, days.dataRange))">
+                                <b>@days.dataRange.ToString("ddd dd-MMM-yy")</b>
+                            </div>
+                            <div class="panel panel-default border @weeks.Where(d => d.dataRange.Date == days.dataRange.Date).Select(e => e.DayCollapsed).FirstOrDefault()">
+                                @*@foreach (var dgt in digits)
+                                {
+                                    <div class="border-0 ml-5 p-1"> @dgt<div>
+                                }*@
+                                @foreach (var exp in Expenses.Where(e => e.ExpenseDate == days.dataRange.Date))
+                                {
+                                <div class="border-0 ml-5 p-1">
+                                    <td>[@exp.Id] &nbsp;</td>
+                                    <td>@exp.ExpenseTitle &nbsp;</td>
+                                    <td>@exp.ExpensesAmount.ToString("N2")  &nbsp;</td>
+                                    <td>@exp.Currency.CurrencyName  &nbsp;</td>
+                                    <td>@exp.Category.Category &nbsp;</td>
+                                    <td>@exp.PaymentMethod &nbsp;</td>
+                                    <td>@exp.PaymentType &nbsp;</td>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+}
+@code {
+    class ExpenseTree
+    {
+        public DateTime dataRange { get; set; }
+
+        //public bool IsYearCollapsed { get; set; }
+        //public bool IsMonthCollapsed { get; set; }
+        //public bool IsWeekCollapsed { get; set; }
+
+        public string YearCollapsed { get; set; } = "collapse";
+        public string MonthCollapsed { get; set; } = "collapse";
+        public string WeekCollapsed { get; set; } = "collapse";
+        public string DayCollapsed { get; set; } = "collapse";
+
+        //public bool isCollapsed { get; set; } = false;
+        //public bool isChecked { get; set; } = false;
+
+        //public ExpenseTree() { }
+        //public ExpenseTree(DateTime dt)
+        //{
+        //    dataRange = dt;
+        //    isCollapsed = false;
+        //    isChecked = false;
+        //}
+        //public ExpenseTree(DateTime dt, bool IsCollapsed, bool IsChecked)
+        //{
+        //    dataRange = dt;
+        //    isCollapsed = IsCollapsed;
+        //    isChecked = IsChecked;
+        //}
+    }
+
+    [Parameter]
+    public List<DateTime> DateRange { get; set; }
+    [Parameter]
+    public List<Data.Expense> Expenses { get; set; }
+    [Parameter]
+    public EventCallback<DateTime> OnNodeClicked { get; set; }
+    //List<int> digits = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };  //dummy value
+
+    private List<ExpenseTree> _expTree;
+    private enum Operator { YEARLY, MONTHLY, WEEKLY, DAILY }
+
+    private string GetMonthName(int month)
+    {
+        return System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month);
+    }
+    private int GetWeekNumber(DateTime dt)
+    {
+        return System.Globalization.CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(dt, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+    }
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+    protected override void OnParametersSet()
+    {
+        //Only for Test Purpose Date Range for last few Months//
+        //var from = DateTime.Now.AddMonths(-3);
+        //var to = DateTime.Now;
+        //var DateRange_ForTest = Enumerable.Range(0, 1 + to.Subtract(from).Days)
+        //.Select(offset => from.AddDays(offset))
+        //.ToList();
+        //_expTree = DateRange_ForTest.Select(i =>
+        //        new ExpenseTree { dataRange = i.Date, YearCollapsed = "collapse", MonthCollapsed = "collapse" }).ToList();
+        //---------Test Data closed-------------//
+
+        //Ref: Copy list to another list on based on property name
+        if(_expTree == null)
+            _expTree = DateRange.Select(i =>
+            new ExpenseTree { dataRange = i.Date, YearCollapsed = "collapse", MonthCollapsed = "collapse" }).ToList();
+
+        //Alternative ways to instanciate DateRange
+        //List<ExpenseTree> expTree = new List<ExpenseTree>();
+        //foreach (var item in DateRange)
+        //{
+        //    ExpenseTree exptr = new ExpenseTree { dataRange = item.Date, isChecked = false, isCollapsed = false };
+        //    expTree.Add(exptr);
+        //}
+    }
+
+    private async Task Collapse_Clicked(object sender, Operator @operator, DateTime theDate)
+    {
+        System.Diagnostics.Debug.WriteLine($"Year {theDate.Year} Month: {GetMonthName(theDate.Month)} Week: {GetWeekNumber(theDate)} Date: {theDate.ToString("yyyy-MMM-dd ddd")}");
+
+        switch (@operator)
+        {
+            case Operator.YEARLY:
+                _expTree.Where(y => y.dataRange.Year == theDate.Year).ToList()
+                    .ForEach(e => e.YearCollapsed = e.YearCollapsed == "" ? "collapse" : "");
+
+                break;
+
+            case Operator.MONTHLY:
+                _expTree.Where(m => (m.dataRange.Year == theDate.Year) && (m.dataRange.Month == theDate.Month))
+                    .ToList().ForEach(e => e.MonthCollapsed = e.MonthCollapsed == "" ? "collapse" : "");
+
+                break;
+
+            case Operator.WEEKLY:
+                //var firstDay = theDate;
+                var firstDay = GetWeekNumber(theDate) == GetWeekNumber(theDate.AddDays(6)) ? theDate : theDate.AddDays(-6);
+                var lastDay = firstDay.AddDays(6);
+
+                var weeklyData = Enumerable.Range(0, 1 + theDate.AddDays(6).Subtract(theDate).Days).Select(offset => theDate.AddDays(offset)).ToList();
+                //var yearlyGr = weeklyData.GroupBy(e => e.Year);
+                //var monthlyGr = weeklyData.GroupBy(e => e.Month);
+
+                _expTree.Where(w => (weeklyData.GroupBy(e => e.Year).Select(i => i.Key).Contains(w.dataRange.Year)) &&
+                              (weeklyData.GroupBy(e => e.Month).Select(i => i.Key).Contains(w.dataRange.Month)) &&
+                    (GetWeekNumber(w.dataRange.AddDays(-(int)w.dataRange.DayOfWeek)) == GetWeekNumber(theDate)))
+                    .ToList().ForEach(e => e.WeekCollapsed = e.WeekCollapsed == "" ? "collapse" : "");
+
+                //_expTree.Where(w => (w.dataRange.Year == theDate.Year) && (w.dataRange.Month == theDate.Month) &&
+                //    (GetWeekNumber(w.dataRange.AddDays(-(int)w.dataRange.DayOfWeek)) == GetWeekNumber(theDate)))
+                //    .ToList().ForEach(e => e.WeekCollapsed = e.WeekCollapsed == "" ? "collapse" : "");
+
+                break;
+
+            case Operator.DAILY:
+                _expTree.Where(d => (d.dataRange.Date == theDate))
+                     .ToList().ForEach(e => e.DayCollapsed = e.DayCollapsed == "" ? "collapse" : "");
+                
+                //If not Collapsed
+                if(_expTree.Where(d => d.dataRange.Date == theDate).Select(e =>e.DayCollapsed).FirstOrDefault() == "")
+                await OnNodeClicked.InvokeAsync(theDate);
+
+                break;
+
+            default:
+                break;
+        }
+    }
+    private string CollapseIcon(Operator @operator, DateTime theDate)
+    {
+        string icon = "right";
+        switch (@operator)
+        {
+            case Operator.YEARLY:
+                icon = _expTree.Where(y => y.dataRange.Year == theDate.Year)
+                    .Select(e => e.YearCollapsed).FirstOrDefault() == "" ? "bottom" : "right";
+                break;
+
+            case Operator.MONTHLY:
+                icon = _expTree.Where(m => (m.dataRange.Year == theDate.Year) && (m.dataRange.Month == theDate.Month))
+                    .Select(e => e.MonthCollapsed).FirstOrDefault() == "" ? "bottom" : "right";
+                break;
+
+            case Operator.WEEKLY:
+                icon = _expTree.Where(w => (w.dataRange.Year == theDate.Year) && (w.dataRange.Month == theDate.Month) &&
+                    (GetWeekNumber(w.dataRange.AddDays(-(int)w.dataRange.DayOfWeek)) == GetWeekNumber(theDate)))
+                    .Select(e => e.WeekCollapsed).FirstOrDefault() == "" ? "bottom" : "right";
+                break;
+
+            case Operator.DAILY:
+                icon = _expTree.Where(d => (d.dataRange.Date == theDate))
+               .Select(e => e.DayCollapsed).FirstOrDefault() == "" ? "bottom" : "right";
+                break;
+            default:
+                break;
+        }
+        return icon;
+    }
+    //Redundant Mothods (old approch)//
+    //private void Year_Clicked(object sender, string year)
+    //{
+    //    System.Diagnostics.Debug.WriteLine($"Year {year}");
+    //    //*Ref Change List items propery value
+    //    _expTree.Where(y => y.dataRange.Year.ToString() == year).ToList().ForEach(e => e.YearCollapsed = e.YearCollapsed == "" ? "collapse" : "");
+
+    //    System.Diagnostics.Debug.WriteLine(_expTree[0].YearCollapsed);
+    //    System.Diagnostics.Debug.WriteLine(_expTree[_expTree.Count - 1].YearCollapsed);
+
+    //    foreach (var years in _expTree.GroupBy(y => y.dataRange.Year))
+    //    {
+    //        System.Diagnostics.Debug.WriteLine($"Year: {years.Key.ToString("ddd dd-MMM-yyyy")}");
+    //        foreach (var months in years.GroupBy(m => m.dataRange.Month))
+    //        {
+    //            System.Diagnostics.Debug.WriteLine($"Month: {months.Key.ToString("ddd dd-MMM-yyyy")}");
+    //            var v = months.Select(i => i.IsYearCollapsed).FirstOrDefault() ? "collapse" : "";
+    //        }
+    //    }
+    //}
+    //private void Month_Clicked(object sender, string year, string month)
+    //{
+    //    System.Diagnostics.Debug.WriteLine($"Year {year} Month: {month}");
+    //    _expTree.Where(y => (y.dataRange.Year.ToString() == year) && (y.dataRange.Month.ToString() == month)).ToList().ForEach(e => e.MonthCollapsed = e.MonthCollapsed == "" ? "collapse" : "");
+    //}
+    //private void Week_Clicked(object sender, string year, string month, DateTime week)
+    //{
+    //    System.Diagnostics.Debug.WriteLine($"Year {year} Month: {month} Week: {week}");
+
+    //    var theWeek = GetWeekNumber(week);
+
+    //    //Collapse the week
+    //    _expTree.Where(w => (w.dataRange.Year.ToString() == week.Year.ToString()) &&
+    //                        (w.dataRange.Month.ToString() == week.Month.ToString()) &&
+    //        (GetWeekNumber(w.dataRange.AddDays(-(int)w.dataRange.DayOfWeek)) == theWeek)).ToList().ForEach(e => e.WeekCollapsed = e.WeekCollapsed == "" ? "collapse" : "");
+
+    //}
+}

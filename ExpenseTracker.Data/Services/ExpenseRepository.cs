@@ -89,6 +89,24 @@ namespace ExpenseTracker.Data.Services
             return found;
         }
 
+        public async Task<Tuple<DateTime, DateTime>> GetExpenseRangeDatesAsync()
+        {
+            DateTime from = DateTime.Now.Date;
+            DateTime to = DateTime.Now.Date;
+            var result = new Tuple<DateTime, DateTime>(from, to);
+            try
+            {
+                result = new Tuple<DateTime, DateTime>(
+                    await _ctx.Expenses.Select(i => i.ExpenseDate).MinAsync(),
+                    await _ctx.Expenses.Select(i => i.ExpenseDate).MaxAsync());
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return result;
+        }
+
         public async Task<IEnumerable<Expense>> GetExpensesAsync()
         {
             return await _ctx.Expenses.OrderByDescending(x => x.ExpenseDate)

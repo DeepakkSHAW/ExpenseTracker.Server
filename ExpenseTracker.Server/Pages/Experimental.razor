@@ -55,7 +55,43 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-sm-2 font-weight-bold">GOODWILL PKW/Smart</div>
+    <div class="col-sm-2">
+        <label>Add</label>
+        <input type="checkbox" />
+    </div>
+    <div class="col-sm-2">
+        <label>Change</label>
+        <input type="checkbox" />
+    </div>
+    <div class="col-sm-2">
+        <label>Remove</label>
+        <input type="checkbox" />
+    </div>
+    <div class="col-sm-4">
+        <button @onclick="e => this.Collapsed = !this.Collapsed">
+            @(this.Collapsed ? "+" : "-")
+        </button>
+    </div>
+</div>
+<ModalGoodwillPKW_ Collapse="@( this.Collapsed ? "collapse": "")"></ModalGoodwillPKW_>
+
+<input type="button" @onclick="Collapse_Clicked" value="Clicl Me"/>
+
+<div class="panel panel-default border @opened">
+    <p>Rups</p>
+</div>
+
 @code {
+
+
+    private bool Collapsed = true;
+    private string opened { get; set; } = "collapse";
+    private async Task Collapse_Clicked()
+    {
+        opened = opened == "collapse" ? "" : "collapse";
+    }
     int SliderValue = 0;
     IFileListEntry _file;
     string _status;
@@ -90,6 +126,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
+
     }
 
 

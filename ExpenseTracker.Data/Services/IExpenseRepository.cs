@@ -8,6 +8,7 @@ namespace ExpenseTracker.Data.Services
     public interface IExpenseRepository
     {
         Task<IEnumerable<Expense>> GetExpensesAsync();
+        Task<Tuple<DateTime, DateTime>> GetExpenseRangeDatesAsync();
         Task<Expense> GetExpensesAsync(int id);
         Task<bool> ExpenseExist(int id);
         Task<IEnumerable<Expense>> GetExpensesAsync(DateTime from, DateTime to);

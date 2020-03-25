@@ -1,6 +1,85 @@
 ﻿@page "/ExpenseHistory"
-<h3>ExpenseHistory - Under Construction</h3>
+@inject Microsoft.Extensions.Configuration.IConfiguration configuration
+@using System.IO
+@using System.Text
+@using System.Globalization;
+@using ExpenseTracker.Server.Components
 
-@code {
+<h3>ExpenseHistory - in progress</h3>
+<div class="list-group oi oi-caret-right btn-outline-primary p-1 m-1">2019</div>
+<div class="list-group oi oi-caret-bottom btn-outline-secondary p-1 m-1">2020</div>
+<br />
+<DateTreeExpenses DateRange="@_dateRange" Expenses="@_expenses" OnNodeClicked="OnNode_Clicked"></DateTreeExpenses>
 
+@*<ul class="list-unstyled">
+        <li>Home</li>
+        <li>
+            Products
+            <ul>
+                <li>Gadgets</li>
+                <li>Accessories</li>
+            </ul>
+        </li>
+        <li>About Us</li>
+        <li>Contact</li>
+    </ul>*@
+
+
+
+
+
+@*<div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" href="#collapse1">Collapsible list group</a>
+                </h4>
+            </div>
+            <div id="collapse1" class="panel-collapse collapse">
+                <ul class="list-group">
+                    <li class="list-group-item">One</li>
+                    <li class="list-group-item">Two</li>
+                    <li class="list-group-item">Three</li>
+                </ul>
+                <div class="panel-footer">Footer</div>
+            </div>
+        </div>
+    </div>*@
+
+
+
+
+@code
+{
+    [Inject]
+    private Data.Services.IExpenseRepository srvExpense { get; set; }
+    private List<Data.Expense> _expenses;
+    //private Data.Expense _expense;
+    private List<DateTime> _dateRange;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var range = await srvExpense.GetExpenseRangeDatesAsync();
+        var from = range.Item1;
+        var to = range.Item2;
+
+        //*Ref: List of all dates between 2 dates *//
+        _dateRange = Enumerable.Range(0, 1 + to.Subtract(from).Days)
+          .Select(offset => from.AddDays(offset))
+          .ToList();
+        _expenses = new List<Data.Expense>();
+        //var dt = GetDates(from, to).Select(x => x.ToString("MMMM yyyy")).ToArray();
+    }
+    private async Task OnNode_Clicked(DateTime theDate)
+    {
+        System.Diagnostics.Debug.WriteLine($"OnNode_Clicked {theDate}");
+        if (_expenses.Where(e => e.ExpenseDate == theDate).Count() == 0)
+        {
+            var expenses = await srvExpense.GetExpensesAsync(theDate, theDate);
+            //_expenses = expenses.ToList();
+
+            //*ref copy items from list to list
+            _expenses.AddRange(expenses);
+        }
+    }
 }
