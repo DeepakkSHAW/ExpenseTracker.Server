@@ -12,9 +12,9 @@
   </PropertyGroup>
   
   <!-- improve your development experience with Blazor-->
-  <!--<PropertyGroup>
+  <PropertyGroup>
     <BlazorLinkOnBuild  Condition="'$(Configuration)'!='Release'">false</BlazorLinkOnBuild>
-  </PropertyGroup>-->
+  </PropertyGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\ExpenseTracker.Data\ExpenseTracker.Data.csproj" />

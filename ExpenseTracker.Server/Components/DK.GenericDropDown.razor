@@ -1,0 +1,60 @@
+﻿@typeparam TElement
+@if (data == null)
+{
+    <p><em>Loading Data...</em></p>
+}
+else if (!data.Any())
+{
+    <p><em>No Data Found...</em></p>
+}
+else
+{ 
+    <select class="form-control m-0 p-0" @onchange="DropDownChanges">
+        <option value="">-- Select --</option>
+        @foreach (var dataItem in data)
+        {
+            <option value=@infoID.GetValue(dataItem).ToString()>
+                @infoValue.GetValue(dataItem).ToString()
+            </option>
+        }
+    </select>
+}
+
+@code {
+    [Parameter] public List<TElement> data { get; set; }
+    [Parameter] public string nameID { get; set; }
+    [Parameter] public string nameValue { get; set; }
+    [Parameter] public EventCallback<string> OnDropDownChange { get; set; }
+
+    protected System.Reflection.PropertyInfo infoID;
+    protected System.Reflection.PropertyInfo infoValue;
+
+    //A Dummy Function for test
+    public void ExceFunc(ChangeEventArgs e)
+    {
+        var id = e.Value.ToString();
+        OnDropDownChange.InvokeAsync(id);
+
+    }
+    public async Task DropDownChanges(ChangeEventArgs e)
+    {
+        var id = e.Value.ToString();
+        await OnDropDownChange.InvokeAsync(id);
+    }
+
+    protected override void OnInitialized()
+    {
+
+        infoID = data[0].GetType().GetProperty(nameID);
+        infoValue = data[0].GetType().GetProperty(nameValue);
+
+        //System.Diagnostics.Debug.WriteLine($"Count: {data.Count} Show 1st Value - {data[0].GetType().GetProperty(nameValue).ToString()}");
+        //Console.WriteLine(infoID.GetValue(data[10]).ToString());
+        //Console.WriteLine(infoValue.GetValue(data[10]).ToString());
+    }
+    //public static bool HasProperty(this object obj, string propertyName)
+    //{
+    //    return obj.GetType().GetProperty(propertyName) != null;
+    //}
+
+}

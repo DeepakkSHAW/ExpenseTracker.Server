@@ -1,7 +1,16 @@
 ﻿
+<span class="d-inline-warning" data-toggle="tooltip" title="un@_collapse">
+    <a class="btn btn-sm oi oi-collapse-down btn-outline-primary" @onclick="@(e => TreeCollase(e, Direction.Down))" />
+</span>
+&nbsp;
+<span class="d-inline-warning" data-toggle="tooltip" title="@_collapse all">
+    <a class="btn btn-sm oi oi-collapse-up btn-outline-secondary" id="up" @onclick="@(e => TreeCollase(e, Direction.Up))" />
+</span>
+<br />
+
 @foreach (var years in _expTree.GroupBy(y => y.dataRange.Year))
 {
-    <div class="oi oi-caret-@CollapseIcon(Operator.YEARLY, new DateTime(years.Key, 1, 1)) border-1 ml-0 p-1" id="@years.Key"
+    <div class="oi oi-caret-@CollapseIcon(Operator.YEARLY, new DateTime(years.Key, 1, 1)) border-1 ml-0 p-1 btn-outline-primary" id="@years.Key"
          @onclick="@(e => Collapse_Clicked(e, Operator.YEARLY, new DateTime(years.Key, 1, 1)))">
         <b>@years.Key</b>
     </div>
@@ -9,18 +18,18 @@
 
     foreach (var months in years.GroupBy(m => m.dataRange.Month))
     {
-        <div class="panel panel-default border @months.Select(e => e.YearCollapsed).FirstOrDefault()">
+        <div class="panel panel-default border-0 @months.Select(e => e.YearCollapsed).FirstOrDefault()">
 
-            <div class="oi oi-caret-@CollapseIcon(Operator.MONTHLY, new DateTime(years.Key, months.Key, 1)) border-1 ml-2 p-1" id="@months.Key"
+            <div class="oi oi-caret-@CollapseIcon(Operator.MONTHLY, new DateTime(years.Key, months.Key, 1)) border-0 ml-2 p-1 btn-outline-info" id="@months.Key"
                  @onclick="@(e => Collapse_Clicked(e, Operator.MONTHLY, new DateTime(years.Key, months.Key, 1)))">
                 @GetMonthName(months.Key)
             </div><br />
 
             @foreach (var weeks in months.GroupBy(w => w.dataRange.AddDays(-(int)w.dataRange.DayOfWeek)))
             {
-                <div class="panel panel-default border @weeks.Select(e => e.MonthCollapsed).FirstOrDefault()">
+                <div class="panel panel-default border-0 @weeks.Select(e => e.MonthCollapsed).FirstOrDefault()">
 
-                    <div class="oi oi-caret-@CollapseIcon(Operator.WEEKLY, weeks.Key) border-1 ml-3 p-1" id="@weeks.Key"
+                    <div class="oi oi-caret-@CollapseIcon(Operator.WEEKLY, weeks.Key) border-0 ml-3 p-1 btn-outline-success" id="@weeks.Key"
                          @onclick="@(e => Collapse_Clicked(e, Operator.WEEKLY, weeks.Key))">
                         W-<b>@GetWeekNumber(weeks.Key)</b>
                         &nbsp;
@@ -31,28 +40,27 @@
 
                     @foreach (var days in weeks)
                     {
-                        <div class="panel panel-default border @weeks.Select(e => e.WeekCollapsed).FirstOrDefault()">
+                        <div class="panel panel-default border-0 @weeks.Select(e => e.WeekCollapsed).FirstOrDefault()">
 
-                            <div class="oi oi-caret-@CollapseIcon(Operator.DAILY, days.dataRange) border-1 ml-4 p-1"
+                            <div class="oi oi-caret-@CollapseIcon(Operator.DAILY, days.dataRange) border-0 ml-4 p-1 btn-outline-warning"
                                  @onclick="@(async(e) => await Collapse_Clicked(e, Operator.DAILY, days.dataRange))">
                                 <b>@days.dataRange.ToString("ddd dd-MMM-yy")</b>
                             </div>
-                            <div class="panel panel-default border @weeks.Where(d => d.dataRange.Date == days.dataRange.Date).Select(e => e.DayCollapsed).FirstOrDefault()">
-                                @*@foreach (var dgt in digits)
-                                {
-                                    <div class="border-0 ml-5 p-1"> @dgt<div>
-                                }*@
+                            <div class="panel panel-default border-0 @weeks.Where(d => d.dataRange.Date == days.dataRange.Date).Select(e => e.DayCollapsed).FirstOrDefault()">
+
                                 @foreach (var exp in Expenses.Where(e => e.ExpenseDate == days.dataRange.Date))
                                 {
-                                <div class="border-0 ml-5 p-1">
-                                    <td>[@exp.Id] &nbsp;</td>
-                                    <td>@exp.ExpenseTitle &nbsp;</td>
-                                    <td>@exp.ExpensesAmount.ToString("N2")  &nbsp;</td>
-                                    <td>@exp.Currency.CurrencyName  &nbsp;</td>
-                                    <td>@exp.Category.Category &nbsp;</td>
-                                    <td>@exp.PaymentMethod &nbsp;</td>
-                                    <td>@exp.PaymentType &nbsp;</td>
-                                </div>
+                                    <small>
+                                        <div class="row border-0 border-primary ml-5 p-0">
+                                            <div class="col-1 border-0 border-primary">[@exp.Id]</div>
+                                            <div class="col-4 border-0 border-primary"><b>@exp.ExpenseTitle</b></div>
+                                            <div class="col-1 border-0 border-primary">@exp.ExpensesAmount.ToString("N2")</div>
+                                            <div class="col-1 border-0 border-primary">@exp.Currency.CurrencyName</div>
+                                            <div class="col-2 border-0 border-primary">@exp.Category.Category</div>
+                                            <div class="col-1 border-0 border-primary">@exp.PaymentMethod</div>
+                                            <div class="col-1 border-0 border-primary">@exp.PaymentType</div>
+                                        </div>
+                                    </small>
                                 }
                             </div>
                         </div>
@@ -67,32 +75,13 @@
     {
         public DateTime dataRange { get; set; }
 
-        //public bool IsYearCollapsed { get; set; }
-        //public bool IsMonthCollapsed { get; set; }
-        //public bool IsWeekCollapsed { get; set; }
-
-        public string YearCollapsed { get; set; } = "collapse";
-        public string MonthCollapsed { get; set; } = "collapse";
-        public string WeekCollapsed { get; set; } = "collapse";
-        public string DayCollapsed { get; set; } = "collapse";
-
-        //public bool isCollapsed { get; set; } = false;
-        //public bool isChecked { get; set; } = false;
-
-        //public ExpenseTree() { }
-        //public ExpenseTree(DateTime dt)
-        //{
-        //    dataRange = dt;
-        //    isCollapsed = false;
-        //    isChecked = false;
-        //}
-        //public ExpenseTree(DateTime dt, bool IsCollapsed, bool IsChecked)
-        //{
-        //    dataRange = dt;
-        //    isCollapsed = IsCollapsed;
-        //    isChecked = IsChecked;
-        //}
+        public string YearCollapsed { get; set; } = _collapse;
+        public string MonthCollapsed { get; set; } = _collapse;
+        public string WeekCollapsed { get; set; } = _collapse;
+        public string DayCollapsed { get; set; } = _collapse;
     }
+    private const string _collapse = "collapse";
+    private int _levelCollepse = 0;
 
     [Parameter]
     public List<DateTime> DateRange { get; set; }
@@ -100,10 +89,10 @@
     public List<Data.Expense> Expenses { get; set; }
     [Parameter]
     public EventCallback<DateTime> OnNodeClicked { get; set; }
-    //List<int> digits = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };  //dummy value
 
     private List<ExpenseTree> _expTree;
     private enum Operator { YEARLY, MONTHLY, WEEKLY, DAILY }
+    private enum Direction { Up, Down }
 
     private string GetMonthName(int month)
     {
@@ -119,7 +108,7 @@
     }
     protected override void OnParametersSet()
     {
-        //Only for Test Purpose Date Range for last few Months//
+        //----------Only for Test Purpose Date Range for last few Months----------------//
         //var from = DateTime.Now.AddMonths(-3);
         //var to = DateTime.Now;
         //var DateRange_ForTest = Enumerable.Range(0, 1 + to.Subtract(from).Days)
@@ -127,12 +116,12 @@
         //.ToList();
         //_expTree = DateRange_ForTest.Select(i =>
         //        new ExpenseTree { dataRange = i.Date, YearCollapsed = "collapse", MonthCollapsed = "collapse" }).ToList();
-        //---------Test Data closed-------------//
+        //------------------------Test Data closed----------------------------------------//
 
         //Ref: Copy list to another list on based on property name
-        if(_expTree == null)
+        if (_expTree == null)
             _expTree = DateRange.Select(i =>
-            new ExpenseTree { dataRange = i.Date, YearCollapsed = "collapse", MonthCollapsed = "collapse" }).ToList();
+            new ExpenseTree { dataRange = i.Date }).ToList();
 
         //Alternative ways to instanciate DateRange
         //List<ExpenseTree> expTree = new List<ExpenseTree>();
@@ -184,10 +173,10 @@
             case Operator.DAILY:
                 _expTree.Where(d => (d.dataRange.Date == theDate))
                      .ToList().ForEach(e => e.DayCollapsed = e.DayCollapsed == "" ? "collapse" : "");
-                
+
                 //If not Collapsed
-                if(_expTree.Where(d => d.dataRange.Date == theDate).Select(e =>e.DayCollapsed).FirstOrDefault() == "")
-                await OnNodeClicked.InvokeAsync(theDate);
+                if (_expTree.Where(d => d.dataRange.Date == theDate).Select(e => e.DayCollapsed).FirstOrDefault() == "")
+                    await OnNodeClicked.InvokeAsync(theDate);
 
                 break;
 
@@ -225,41 +214,33 @@
         }
         return icon;
     }
-    //Redundant Mothods (old approch)//
-    //private void Year_Clicked(object sender, string year)
-    //{
-    //    System.Diagnostics.Debug.WriteLine($"Year {year}");
-    //    //*Ref Change List items propery value
-    //    _expTree.Where(y => y.dataRange.Year.ToString() == year).ToList().ForEach(e => e.YearCollapsed = e.YearCollapsed == "" ? "collapse" : "");
+    private void TreeCollase(object sender, Direction direction)
+    {
+        if (direction == Direction.Down) _levelCollepse++;
+        else if (direction == Direction.Up) _levelCollepse--;
 
-    //    System.Diagnostics.Debug.WriteLine(_expTree[0].YearCollapsed);
-    //    System.Diagnostics.Debug.WriteLine(_expTree[_expTree.Count - 1].YearCollapsed);
+        _levelCollepse = _levelCollepse > 3 ? 3 : _levelCollepse;
+        _levelCollepse = _levelCollepse < 0 ? 0 : _levelCollepse;
 
-    //    foreach (var years in _expTree.GroupBy(y => y.dataRange.Year))
-    //    {
-    //        System.Diagnostics.Debug.WriteLine($"Year: {years.Key.ToString("ddd dd-MMM-yyyy")}");
-    //        foreach (var months in years.GroupBy(m => m.dataRange.Month))
-    //        {
-    //            System.Diagnostics.Debug.WriteLine($"Month: {months.Key.ToString("ddd dd-MMM-yyyy")}");
-    //            var v = months.Select(i => i.IsYearCollapsed).FirstOrDefault() ? "collapse" : "";
-    //        }
-    //    }
-    //}
-    //private void Month_Clicked(object sender, string year, string month)
-    //{
-    //    System.Diagnostics.Debug.WriteLine($"Year {year} Month: {month}");
-    //    _expTree.Where(y => (y.dataRange.Year.ToString() == year) && (y.dataRange.Month.ToString() == month)).ToList().ForEach(e => e.MonthCollapsed = e.MonthCollapsed == "" ? "collapse" : "");
-    //}
-    //private void Week_Clicked(object sender, string year, string month, DateTime week)
-    //{
-    //    System.Diagnostics.Debug.WriteLine($"Year {year} Month: {month} Week: {week}");
+        System.Diagnostics.Debug.WriteLine($"Collapse Level {_levelCollepse}");
+        //*Ref Update all objects in a collection using LINQ
+        //_expTree.ToList().ForEach(e => e.YearCollapsed = _collapse);
 
-    //    var theWeek = GetWeekNumber(week);
+        switch (_levelCollepse)
+        {
+            case 0:
+                _expTree.All(e => { e.YearCollapsed = _collapse; e.MonthCollapsed = _collapse; e.WeekCollapsed = _collapse; return true; });
+                break;
+            case 1:
+                _expTree.All(e => { e.YearCollapsed = ""; e.MonthCollapsed = _collapse; e.WeekCollapsed = _collapse; return true; });
+                break;
+            case 2:
+                _expTree.All(e => { e.YearCollapsed = ""; e.MonthCollapsed = ""; e.WeekCollapsed = _collapse; return true; });
+                break;
+            case 3:
+                _expTree.All(e => { e.YearCollapsed = ""; e.MonthCollapsed = ""; e.WeekCollapsed = ""; return true; });
+                break;
+        }
 
-    //    //Collapse the week
-    //    _expTree.Where(w => (w.dataRange.Year.ToString() == week.Year.ToString()) &&
-    //                        (w.dataRange.Month.ToString() == week.Month.ToString()) &&
-    //        (GetWeekNumber(w.dataRange.AddDays(-(int)w.dataRange.DayOfWeek)) == theWeek)).ToList().ForEach(e => e.WeekCollapsed = e.WeekCollapsed == "" ? "collapse" : "");
-
-    //}
+    }
 }

@@ -5,49 +5,7 @@
 @using System.Globalization;
 @using ExpenseTracker.Server.Components
 
-<h3>ExpenseHistory - in progress</h3>
-<div class="list-group oi oi-caret-right btn-outline-primary p-1 m-1">2019</div>
-<div class="list-group oi oi-caret-bottom btn-outline-secondary p-1 m-1">2020</div>
-<br />
 <DateTreeExpenses DateRange="@_dateRange" Expenses="@_expenses" OnNodeClicked="OnNode_Clicked"></DateTreeExpenses>
-
-@*<ul class="list-unstyled">
-        <li>Home</li>
-        <li>
-            Products
-            <ul>
-                <li>Gadgets</li>
-                <li>Accessories</li>
-            </ul>
-        </li>
-        <li>About Us</li>
-        <li>Contact</li>
-    </ul>*@
-
-
-
-
-
-@*<div class="panel-group">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h4 class="panel-title">
-                    <a data-toggle="collapse" href="#collapse1">Collapsible list group</a>
-                </h4>
-            </div>
-            <div id="collapse1" class="panel-collapse collapse">
-                <ul class="list-group">
-                    <li class="list-group-item">One</li>
-                    <li class="list-group-item">Two</li>
-                    <li class="list-group-item">Three</li>
-                </ul>
-                <div class="panel-footer">Footer</div>
-            </div>
-        </div>
-    </div>*@
-
-
-
 
 @code
 {

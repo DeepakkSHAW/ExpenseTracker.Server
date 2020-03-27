@@ -4,6 +4,15 @@
 @using Blazorise.Charts
 
 <h3>Experimental Page</h3>
+
+GenericDropDown :
+<div class="row m-1 p-1">
+    <div class="col-md-4">
+        <DK_GenericDropDown data="@expCat" nameID="Id" nameValue="Category" OnDropDownChange="@CategoryDropDown_Changed"></DK_GenericDropDown>
+    </div>
+</div>
+
+<br />
 <div class="container border border-primary">
     <div class="row border border-primary">
         <div class="col-9  border border-primary">DK</div>
@@ -55,43 +64,20 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-sm-2 font-weight-bold">GOODWILL PKW/Smart</div>
-    <div class="col-sm-2">
-        <label>Add</label>
-        <input type="checkbox" />
-    </div>
-    <div class="col-sm-2">
-        <label>Change</label>
-        <input type="checkbox" />
-    </div>
-    <div class="col-sm-2">
-        <label>Remove</label>
-        <input type="checkbox" />
-    </div>
-    <div class="col-sm-4">
-        <button @onclick="e => this.Collapsed = !this.Collapsed">
-            @(this.Collapsed ? "+" : "-")
-        </button>
-    </div>
-</div>
-<ModalGoodwillPKW_ Collapse="@( this.Collapsed ? "collapse": "")"></ModalGoodwillPKW_>
-
-<input type="button" @onclick="Collapse_Clicked" value="Clicl Me"/>
-
-<div class="panel panel-default border @opened">
-    <p>Rups</p>
-</div>
-
 @code {
 
-
-    private bool Collapsed = true;
-    private string opened { get; set; } = "collapse";
-    private async Task Collapse_Clicked()
+    //-------------GenericDropDown Code started---------------------//
+    [Inject]
+    private Data.Services.ICategoryRepository srvCategory { get; set; }
+    private List<ExpenseTracker.Data.ExpenseCategory> expCat;
+    private void CategoryDropDown_Changed(string id)
     {
-        opened = opened == "collapse" ? "" : "collapse";
+        var catId = int.Parse(id);
+        var catText = expCat.FirstOrDefault(s => s.Id == catId).Category;
+        System.Diagnostics.Debug.WriteLine($"[{DateTime.Now}] ID: {id} Value: {catText}");
     }
+    //-------------------------------------------------------------//
+
     int SliderValue = 0;
     IFileListEntry _file;
     string _status;
@@ -126,7 +112,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
-
+        expCat = (await srvCategory.GetCategoriesAsync(true)).ToList();
     }
 
 
