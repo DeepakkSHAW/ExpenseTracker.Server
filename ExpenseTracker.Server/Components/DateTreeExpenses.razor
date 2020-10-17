@@ -47,8 +47,8 @@
                                 <b>@days.dataRange.ToString("ddd dd-MMM-yy")</b>
                             </div>
                             <div class="panel panel-default border-0 @weeks.Where(d => d.dataRange.Date == days.dataRange.Date).Select(e => e.DayCollapsed).FirstOrDefault()">
-
-                                @foreach (var exp in Expenses.Where(e => e.ExpenseDate == days.dataRange.Date))
+                                @ChildContent
+                                @*@foreach (var exp in Expenses.Where(e => e.ExpenseDate == days.dataRange.Date))
                                 {
                                     <small>
                                         <div class="row border-0 border-primary ml-5 p-0">
@@ -61,7 +61,7 @@
                                             <div class="col-1 border-0 border-primary">@exp.PaymentType</div>
                                         </div>
                                     </small>
-                                }
+                                }*@
                             </div>
                         </div>
                     }
@@ -89,6 +89,8 @@
     public List<Data.Expense> Expenses { get; set; }
     [Parameter]
     public EventCallback<DateTime> OnNodeClicked { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
 
     private List<ExpenseTree> _expTree;
     private enum Operator { YEARLY, MONTHLY, WEEKLY, DAILY }

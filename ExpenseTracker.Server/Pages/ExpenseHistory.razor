@@ -5,7 +5,24 @@
 @using System.Globalization;
 @using ExpenseTracker.Server.Components
 
-<DateTreeExpenses DateRange="@_dateRange" Expenses="@_expenses" OnNodeClicked="OnNode_Clicked"></DateTreeExpenses>
+<DateTreeExpenses DateRange="@_dateRange" Expenses="@_expenses" OnNodeClicked="OnNode_Clicked">
+    <ChildContent>
+        @foreach (var exp in _expenses.Where(e => e.ExpenseDate == _theDate))
+        {
+            <small>
+                <div class="row border-0 border-primary ml-5 p-0">
+                    <div class="col-1 border-0 border-primary">[@exp.Id]</div>
+                    <div class="col-4 border-0 border-primary"><b>@exp.ExpenseTitle</b></div>
+                    <div class="col-1 border-0 border-primary">@exp.ExpensesAmount.ToString("N2")</div>
+                    <div class="col-1 border-0 border-primary">@exp.Currency.CurrencyName</div>
+                    <div class="col-2 border-0 border-primary">@exp.Category.Category</div>
+                    <div class="col-1 border-0 border-primary">@exp.PaymentMethod</div>
+                    <div class="col-1 border-0 border-primary">@exp.PaymentType</div>
+                </div>
+            </small>
+        }
+    </ChildContent>
+</DateTreeExpenses>
 
 @code
 {
@@ -14,6 +31,7 @@
     private List<Data.Expense> _expenses;
     //private Data.Expense _expense;
     private List<DateTime> _dateRange;
+    private DateTime _theDate = DateTime.Now;
 
     protected override async Task OnInitializedAsync()
     {
@@ -30,6 +48,7 @@
     }
     private async Task OnNode_Clicked(DateTime theDate)
     {
+        _theDate = theDate;
         System.Diagnostics.Debug.WriteLine($"OnNode_Clicked {theDate}");
         if (_expenses.Where(e => e.ExpenseDate == theDate).Count() == 0)
         {
